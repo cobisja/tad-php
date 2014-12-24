@@ -6,49 +6,6 @@ use TADPHP\TADHelpers;
 class TADHelpersTest extends \PHPUnit_Framework_TestCase
 {
   /**
-   * @dataProvider datetimeFixtures
-   */
-  public function testSetupDateIsOk(array $datetime)
-  {
-    $this->assertInternalType('array', $datetime);
-    
-    $valid_datetime_keys = ['year', 'month', 'day', 'hour', 'minute', 'second'];
-    $datetime_keys = array_keys($datetime);
-    
-    $this->assertEmpty( array_diff( $valid_datetime_keys, $datetime_keys ), 'key(s) inválido(s)');
-  }
-  
-  public function testReverseHex()
-  {
-    $hex_data = "000000000000000000000000000000002202000000000000420400000000000043000000000000004a0a00000000000002000000020000001027000010270000400d0300ce220000ee240000fd0c0300000000000000000000000000";
-
-    $reversed_hex = TADHelpers::reverse_hex($hex_data);
-    
-    $this->assertEquals( strlen($hex_data), strlen($reversed_hex));
-    $this->assertEquals( $hex_data, TADHelpers::reverse_hex($reversed_hex ));
-  }
-  
-  public function testEncodeTime()
-  {
-    $expected_encoded_time = 480003771; // This integer represents '2014-12-07 14:22:51' timestamp.
-
-    $dt = ['date'=>'2014-12-07', 'time'=>'14:22:51'];
-    $t = TADHelpers::setup_datetime_array($dt);    
-    $encoded_time = TADHelpers::encode_time($t);
-    
-    $this->assertInternalType('integer', $encoded_time);
-    $this->assertEquals($expected_encoded_time, $encoded_time);    
-  }
-  
-  public function testDecodeTime()
-  {
-    $expected_timestamp = '2014-12-07 14:22:51';
-    $timestamp = 480003771; // This integer represents $expected_timestamp value.
-    
-    $this->assertEquals($expected_timestamp, TADHelpers::decode_time($timestamp));
-  }
-  
-  /**
    * @dataProvider xmlStandardFixture
    */
   public function testFilterXmlByDate($xml)
@@ -138,17 +95,7 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
     $this->assertEquals($xml, $expected_xml);
   }
   
-  public function datetimeFixtures()
-  {
-    return [
-      'empty_args' => [TADHelpers::setup_datetime_array()],
-      'only_date'  => [TADHelpers::setup_datetime_array(['date'=>'2014-12-06'])],
-      'only_time'  => [TADHelpers::setup_datetime_array(['time'=>'08:38:23'])],
-      'valid_args' => [TADHelpers::setup_datetime_array(['date'=>'2014-12-06', 'time'=>'08:38:23'])] ,
-      'crazy_args' => [TADHelpers::setup_datetime_array(['foo'=>'123', 'bar'=>'abc', 'baz'=>'#$%'])]
-    ];
-  }
-  
+
   public function xmlStandardFixture()
   {
     return [

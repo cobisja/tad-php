@@ -176,7 +176,9 @@ class TADZKLib
 
   private function zk_set_date(array $dt=[])
   { 
-    return $this->send_command_to_device( self::CMD_SET_TIME, pack( 'I', TADHelpers::encode_time( TADHelpers::setup_datetime_array($dt) ) ) );
+    $normalized_datetime = $this->setup_datetime($dt);
+    $encoded_time = $this->encode_time( $normalized_datetime );
+    return $this->send_command_to_device( self::CMD_SET_TIME, pack( 'I', $encoded_time ) );
   }
 
   private function zk_set_user_info($u)
@@ -188,9 +190,9 @@ class TADZKLib
   private function zk_get_free_sizes()
   {
     $fs = [];
-    $free_sizes_info = TADHelpers::reverse_hex( bin2hex( $this->send_command_to_device( self::CMD_GET_FREE_SIZES ) ) );
+    $free_sizes_info = $this->reverse_hex( bin2hex( $this->send_command_to_device( self::CMD_GET_FREE_SIZES ) ) );
 
-    if(!$free_sizes_info){
+    if( !$free_sizes_info ){
       $fs = false;
     }
     else{
@@ -362,5 +364,71 @@ class TADZKLib
     }
 
     return TADHelpers::array_to_xml( new \SimpleXMLElement('<' . $base_xml_tag . '/>'), $response_data );
-  }  
+  }
+  
+  /**
+   * Take an array in the form of <code>['date'=>date_value, 'time'=>time_value]</code> y returns
+   * another array with the following form: 
+   * 
+   * <code>
+   * ['year'=>foo_year, 'month'=>bar_month, 'day'=>taz_day,
+   *  'hour'=>foo_hour, 'minute=>bar_minute, 'second'=>taz_minute]
+   * </code>
+   * 
+   * Any missing item from input array is replaced by corresponding element generated from 
+   * current date and time.
+   * 
+   * @param array $dt input 'datetime' array.
+   * @return array array generated.
+   */
+  private function setup_datetime(array $dt=[])
+  {
+    $now = explode(' ', date("Y-m-d H:i:s"));
+    $dt = array_filter($dt, 'strlen');
+
+    !isset($dt['date']) ? $dt['date'] = $now[0] : null;
+    !isset($dt['time']) ? $dt['time'] = $now[1] : null;
+    
+    $date = explode('-', $dt['date']);
+    $time = explode(':', $dt['time']);
+    
+    return ['year'=>$date[0], 'month'=>$date[1], 'day'=>$date[2],'hour'=>$time[0], 'minute'=>$time[1], 'second'=>$time[2]];
+  }
+  
+  /**
+   * Method taken from PHPLib @link http://dnaextrim.github.io/php_zklib/ project.
+   * 
+   * @param string $hexstr hex string.
+   * @return string hex string reversed.
+   */
+  private function reverse_hex($hexstr)
+  {
+    $tmp = '';
+
+    for ( $i=strlen($hexstr); $i>=0; $i-- ) {
+      $tmp .= substr($hexstr, $i, 2);
+      $i--;
+    }
+
+    return $tmp;
+  }
+  
+  /**
+   * Method taken from PHPZKLib @link http://dnaextrim.github.io/php_zklib/ project.
+   * 
+   * It's been modified to accept an associative array as input.
+   * 
+   * @param array $t array with a timestamp data.
+   * @return int timestamp encoded.
+   */
+  private function encode_time(array $t)
+  {
+    /*Encode a timestamp send at the timeclock
+
+    copied from zkemsdk.c - EncodeTime*/
+    $d = ( ($t['year'] % 100) * 12 * 31 + (($t['month'] - 1) * 31) + $t['day'] - 1) *
+         (24 * 60 * 60) + ($t['hour'] * 60 + $t['minute']) * 60 + $t['second'];
+
+    return $d;    
+  }
 }
