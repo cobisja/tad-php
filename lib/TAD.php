@@ -299,12 +299,9 @@ class TAD
    */
   public function execute_command_via_tad_soap($command, array $args=[])
   {
-    $command_args = $this->config_array_items( 
-            self::$parseable_args,
-            array_merge( ['com_key' => $this->get_com_key()], $args )
-    );
+    $command_args = $this->config_array_items( array_merge( ['com_key' => $this->get_com_key()], $args ) );
     
-    return $this->tad_soap->execute_soap_command( $command, $command_args, self::$parseable_args );
+    return $this->tad_soap->execute_soap_command( $command, $command_args );
   }
   
   /**
@@ -320,7 +317,7 @@ class TAD
    */
   public function execute_command_via_zklib($command, array $args=[])
   {
-    $command_args = $this->config_array_items(self::$parseable_args, $args, ['include_keys'=>true]);
+    $command_args = $this->config_array_items($args);
     $response = $this->zklib->{$command}($command_args);
     
     return $response;
@@ -443,23 +440,20 @@ class TAD
   }
   
   /**
-   * Returns an array with all its items with values bases on wich ones are present in another array
-   * supplied as input.
+   * Returns an array with all parseable_args, allowed by the class, initialized with specific values
+   * passed through $values array. Those args not passed in method param will be set to null.
    * 
-   * @param array $base base array with searching criterias.
    * @param array $values array values to be analized.
-   * @param array $options tells if generated array should be an associative one.
    * @return array array generated.
    */
-  private function config_array_items(array $base, array $values, array $options=[])
+  private function config_array_items(array $values)
   {
-    $normalized_args = [];    
-    $include_keys = isset($options['include_keys']) && $options['include_keys'];
+    $normalized_args = [];
     
-    foreach($base as $parseable_arg_key){
+    foreach(self::$parseable_args as $parseable_arg_key){
       $normalized_args[$parseable_arg_key] = isset($values[$parseable_arg_key]) ? $values[$parseable_arg_key] : null;
     }
-    
-    return $include_keys ? $normalized_args : array_values($normalized_args);    
+
+    return $normalized_args;
   }  
 }
