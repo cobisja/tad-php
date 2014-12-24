@@ -299,11 +299,9 @@ class TAD
    */
   public function execute_command_via_tad_soap($command, array $args=[])
   {
-    return $this->tad_soap->execute_soap_command(
-            $command,
-            array_merge( ['com_key' => $this->get_com_key()], $args ),
-            self::$parseable_args
-    );
+    $command_args = $this->config_array_items( array_merge( ['com_key' => $this->get_com_key()], $args ) );
+    
+    return $this->tad_soap->execute_soap_command( $command, $command_args );
   }
   
   /**
@@ -319,7 +317,7 @@ class TAD
    */
   public function execute_command_via_zklib($command, array $args=[])
   {
-    $command_args = TADHelpers::config_array_items(self::$parseable_args, $args, ['include_keys'=>true]);
+    $command_args = $this->config_array_items($args);
     $response = $this->zklib->{$command}($command_args);
     
     return $response;
@@ -440,4 +438,22 @@ class TAD
   {
     preg_match('/^(set_|delete_)/', $command_executed) && $this->execute_command_via_tad_soap('refresh_db', []);
   }
+  
+  /**
+   * Returns an array with all parseable_args, allowed by the class, initialized with specific values
+   * passed through $values array. Those args not passed in method param will be set to null.
+   * 
+   * @param array $values array values to be analized.
+   * @return array array generated.
+   */
+  private function config_array_items(array $values)
+  {
+    $normalized_args = [];
+    
+    foreach(self::$parseable_args as $parseable_arg_key){
+      $normalized_args[$parseable_arg_key] = isset($values[$parseable_arg_key]) ? $values[$parseable_arg_key] : null;
+    }
+
+    return $normalized_args;
+  }  
 }

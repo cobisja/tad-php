@@ -40,10 +40,10 @@ class TADSoapTest extends \PHPUnit_Framework_TestCase
    * @depends testBuildTADSoap
    * @dataProvider soapCommandsFixtures
    */
-  public function testBuildSoapRequest($valid_args, $command, array $args, $expected_soap_string, TADSoap $tad_soap)
+  public function testBuildSoapRequest($command, array $args, $expected_soap_string, TADSoap $tad_soap)
   { 
-    $args = TADHelpers::config_array_items( $valid_args, $args );
-    $soap_request = $tad_soap->build_soap_request( $valid_args, $command, $args );
+    $args += array_fill_keys( TAD::get_valid_commands_args(), null );
+    $soap_request = $tad_soap->build_soap_request( $command, $args );
     
     $this->assertEquals( $expected_soap_string, $soap_request );
   }
@@ -116,14 +116,13 @@ class TADSoapTest extends \PHPUnit_Framework_TestCase
   
   public function soapCommandsFixtures()
   {
-    $valid_args = TAD::get_valid_commands_args();
+//    $valid_args = TAD::get_valid_commands_args();
     
     return [
-      [ $valid_args, 'get_date', ['com_key'=>0], '<GetDate><ArgComKey>0</ArgComKey></GetDate>' ],
-      [ $valid_args,'get_att_log', ['com_key'=>0], '<GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN></PIN></Arg></GetAttLog>' ],
-      [ $valid_args, 'get_att_log', ['com_key'=>0, 'pin'=>'99999999'], '<GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN>99999999</PIN></Arg></GetAttLog>' ],
-      [ $valid_args,
-          'set_user_template', [
+      [ 'get_date', ['com_key'=>0], '<GetDate><ArgComKey>0</ArgComKey></GetDate>' ],
+      [ 'get_att_log', ['com_key'=>0], '<GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN></PIN></Arg></GetAttLog>' ],
+      [ 'get_att_log', ['com_key'=>0, 'pin'=>'99999999'], '<GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN>99999999</PIN></Arg></GetAttLog>' ],
+      [ 'set_user_template', [
               'com_key' => 0,
               'pin' => '999',
               'finger_id' => '0',

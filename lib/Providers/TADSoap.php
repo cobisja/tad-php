@@ -78,19 +78,13 @@ class TADSoap
    * Get a command, build the SOAP request and send it to device.
    * 
    * @param mixed $soap_command command to be executed.
-   * @param array $command_args command arguments.
-   * @param array $parseable_args valid args supported by the class.
+   * @param array $soap_command_args command arguments.
    * @return string response.
    */
-  public function execute_soap_command($soap_command, array $command_args, array $parseable_args)
-  {
-    $soap_request = $this->build_soap_request(
-            $parseable_args,
-            $soap_command,
-            TADHelpers::config_array_items( $parseable_args, $command_args )
-    );
-    
+  public function execute_soap_command($soap_command, array $soap_command_args)
+  { 
     $soap_location = $this->get_soap_provider_options()['location'];
+    $soap_request = $this->build_soap_request( $soap_command, $soap_command_args );
     
     $response = !is_array($soap_request) ?
             $this->execute_single_soap_request($soap_request, $soap_location) :
@@ -120,10 +114,10 @@ class TADSoap
    * @param array $args command params.
    * @return string SOAP request.
    */
-  public function build_soap_request(array $valid_args, $command, array $args=[])
+  public function build_soap_request($command, array $args=[])
   { 
     $command_string = $this->get_command_string($command);
-    $soap_request = $this->parse_command_string($valid_args, $command_string, $args);
+    $soap_request = $this->parse_command_string($command_string, $args);
     
     return $soap_request;
   }
@@ -170,15 +164,14 @@ class TADSoap
   /**
    * Parses SOAP request, replacing formal params with actual params.
    * 
-   * @param array $valid_args valid args allowed by the class.
    * @param string $command_string SOAP request.
-   * @param array $args actual args values required by SOAP request.
+   * @param array $command_args actual args values required by SOAP request.
    * @return string SOAP request parsed.
    */  
-  private function parse_command_string(array $valid_args, $command_string, array $args)
+  private function parse_command_string($command_string, array $command_args)
   {
-    $parseable_args = array_map( function($item){ return '%' . $item . '%'; }, $valid_args );
-    $parsed_command = str_replace($parseable_args, $args, $command_string);
+    $parseable_args = array_map( function($item){ return '%' . $item . '%'; }, array_keys($command_args) );
+    $parsed_command = str_replace($parseable_args, array_values($command_args), $command_string);
     
     return $parsed_command;
   }

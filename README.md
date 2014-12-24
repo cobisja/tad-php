@@ -11,9 +11,9 @@ Documentation found about ZK SOAP api is very limited or poor, however TAD class
 ```php
 get_date, get_att_log, get_user_info, get_all_user_info, get_user_template, get_combination, get_option, set_date, set_user_info, set_user_template, delete_user, delete_template, delete_data, delete_user_password, refresh_db, restart.
 ```
-There are some SOAP functions that it's suppossed,  according to the official docs (which incidentally it's very limited and so poor!!!) must show an expected behaviour, but when they are invoked don't work like it's expected, so they become useless (e.g. Restart SOAP call). For these situations, TAD class integrates a PHP class named [PHP_ZKLib](http://dnaextrim.github.io/php_zklib/) (founded after googling for hours, and hours, and hours!!!). This class take a different approach to "talk to device": it uses UDP protocol at device standard port 4370.
+There are some SOAP functions that it's suppossed,  according to the official docs (which incidentally it's very limited and so poor!!!) must show an expected behaviour, but when they are invoked don't work like is expected, so they become useless (e.g. Restart SOAP call). For these situations, TAD class integrates a PHP class named [PHP_ZKLib](http://dnaextrim.github.io/php_zklib/) (found after googling for hours, and hours, and hours!!!). This class takes a different approach to "talk to the device": it uses UDP protocol at device standard port 4370.
 
-PHP_ZKLib class it's been fully integrated, after a refactoring process to take out all duplicated code (DRY).
+PHP_ZKLib class it's been fully integrated, after a refactoring process taking out all duplicated code (DRY).
 
 PHP_ZKLib class exposes the following 7 methods:
 
@@ -21,7 +21,7 @@ PHP_ZKLib class exposes the following 7 methods:
 set_date, enable_device, disable_device, restart, poweroff, get_free_sizes, delete_admin
 ```
 
-For practical purposes, you don't have to be worried about when to use TAD class or PHP_ZKLib class because you only have to get a TAD instance (as shown below) and call any of methods available. The class decides about when run the method invoked using TAD class or PHP_ZKLib class.
+For practical purposes, you don't have to be worried about when to use TAD class or PHP_ZKLib class because you only have to get a TAD instance (as shown below) and call any of its methods available. The class decides about when runs the method invoked using TAD class or PHP_ZKLib class.
 
 ##Requirements
 * Any flavour of PHP 5.3+
@@ -56,9 +56,9 @@ You can customize TAD object traits passing an options array:
   $tad = $tad_factory->get_instance();  
 ```
 ##TAD API
-SOAP api is implemented by TADSoap class. All methods that use UDP Protocol are implemented by PHP_ZKLib class. Even Though you have 2 classes, you do not have to be worried about the method is calling using SOAP api or through PHP_ZKLib. You've got a single interface.
+SOAP api is implemented by TADSoap class. All methods that use UDP Protocol are implemented by PHP_ZKLib class. Even though you have 2 classes, you do not have to be worried about which method is been calling using SOAP api or through PHP_ZKLib. You've got a single interface.
 
-Some methods needs you set up some parameters prior calling them. TAD class uses associative arrays as way to pass params to the methods. Using associative arrays is more "verbose" way and help you to remember wich params you have to pass.
+Some methods need you set up some parameters prior you can call them. TAD class uses associative arrays as way to pass params to the methods. Using associative arrays is a more "verbose" way and help you to remember which params you have to pass.
 
 Valid params supported by TAD class are:
 
@@ -89,7 +89,7 @@ $response = $tad->set_date(['date'=>'2014-01-01', 'time'=>'12:30:15']);
 $response = $tad->set_date();
 ```
 ###Getting attendance logs
-You can retrieve attendance logs for all user or for one:
+You can retrieve attendance logs for all user or just for one:
 ```php
 // Getting attendance logs from all users.
 $logs = $tad->get_att_log();
@@ -104,7 +104,7 @@ You can get all information about a single user or all users. The information yo
 * Name: User's name.
 * Password: Password used to check in/out.
 * Card: Card number (relevant if you device supports RFID technology).
-* Privilege: User rol (1: regular user, 2: enroller, 6: admin and 14: superadmin)
+* Privilege: User's role (1: regular user, 2: enroller, 6: admin and 14: superadmin)
 * Group: User's group privilege.
 * PIN2: Personal identity number (this is an id you can set according your needs).
 * TZ1: User time zone 1.
@@ -141,8 +141,8 @@ The device uses an algorithm to encode fingerprints called "BioBridge" and it ha
 ```php
 /** Setting a user template (fingerprint).
  * 
- * You can upload until 10 templates per user. You have to use 'finger_id' param to indicates
- * wich finger print you are uploading to.
+ * You can upload until 10 templates per user. You have to use 'finger_id' param to indicate
+ * which fingerprint you are uploading to.
  * 
  * Till now, this method only works with VX 9.0 BioBridge algorithm :-(. Any help
  * arround this issue will be appreciated. 
@@ -242,7 +242,7 @@ $tad->poweroff();
 Besides TAD class, you'll find another class named TADHelpers, as it's name suggests, that has several methods to help you with some common functions.
 
 ###Filtering attendance logs by date
-As you saw above, you can get attendance logs from the device using method get_att_logs(). However, you get all attendance logs. As much as you can reduce resultset specifying a user PIN Id.
+As you saw above, you can get attendance logs from the device using method get_att_logs(). However, you get all attendance logs. As much as you can reduce resultset specifying a user's PIN.
 
 What if you want to get just attendance logs (for 1 user or all users) that meet a date criteria?. Well, you can get it!!!.
 ```php
@@ -256,12 +256,12 @@ $filtered_att_logs = TADHelpers::filter_xml_by_date( [
 ] );
 ```
 
-Of course as you can suppose, the devices gives you all attendance logs (it has not a function to filter results by date!!!). 
+Of course as you can suppose, the devices gives you all attendance logs (it has not a uilt-in SOAP call to filter results by date!!!). 
 
 TADHelper class offers filter_xml_by_date() method to process the whole resulset.
 
 ###Don't want to fight with XML?, ..., just don't do it
-TAD Class always returns responses in XML format, that it is it's behavior!. TADHelper class offers you methods to transform XML to JSON or even to Array.
+TAD Class always returns responses in XML format, that is its behavior!. TADHelper class offers you methods to transform XML to JSON or even to Array.
 
 ```php
 // Get attendance logs from user with PIN = 123.
@@ -278,16 +278,52 @@ TAD class is not perfect!!!. As mentioned at the beggining, it's been developed 
 
 * Make set_user_info() method works with BioBridge VX 10.0 algorithm.
 * Find out how to customize the PIN code generation in the PHP_ZKLib zk_set_user_info() method.
-* Test TAD method get_option(). This method allows you getting detailed information about the device, but it's necessary to set it's argument to a valid option name. However, these names are not available, and according to documentation ZK Software they will give you all options names but you have to pay for it.
-* Enhance PHP_ZKLib to allow more sophisticated functions like uploading user's photo for example.
+* Test TAD method get_option(). This method allows you getting detailed information about the device, but it's necessary to set its argument to a valid option name. However, these names are not available, and according to documentation ZK Software can give you all options names but you have to pay for them.
+* Enhance PHP_ZKLib to allows more sophisticated functions like uploading user's photo for example.
 
 ##Author
-My name is [Jorge Cobis](<mailto:jcobis@gmail.com>) - <http://twitter.com/cobisja>, and I'm a amateur developer. I love coding using Ruby and PHP.
+My name is [Jorge Cobis](<mailto:jcobis@gmail.com>) - <http://twitter.com/cobisja>, and I'm an amateur developer. I love coding using Ruby and PHP.
 
 By the way, I'm from Venezuela :-)
 
-##License
-TAD-PHP s licensed under the MIT License - see the LICENSE file for details.
-
 ##Contributing
 Feel free to contribute!!!. Welcome aboard!!!
+
+##Misc
+###Version history
+**0.2.0** (Wednesday, 24th December 2014)
+
+* Some refactoring to make TADPHP\TADSAP, Providers\TADSOAP and Providers\TADZKLib classes simpler.
+* TADPHP\TADHelpers refactored to contains just methods related with TADPHP\TAD class responses.
+* Some bug fixes in test suite.
+* Some improvements in README.md
+
+
+**0.1.0** (Monday, 22nd December 2014)
+
+* Initial public release.
+
+
+##License
+Copyright (c) 2014 Jorge Cobis (<jcobis@gmail.com>)
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
