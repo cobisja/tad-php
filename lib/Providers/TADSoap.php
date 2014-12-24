@@ -83,14 +83,9 @@ class TADSoap
    * @return string response.
    */
   public function execute_soap_command($soap_command, array $command_args, array $parseable_args)
-  {
-    $soap_request = $this->build_soap_request(
-            $parseable_args,
-            $soap_command,
-            TADHelpers::config_array_items( $parseable_args, $command_args )
-    );
-    
+  { 
     $soap_location = $this->get_soap_provider_options()['location'];
+    $soap_request = $this->build_soap_request( $parseable_args, $soap_command, $command_args );
     
     $response = !is_array($soap_request) ?
             $this->execute_single_soap_request($soap_request, $soap_location) :
