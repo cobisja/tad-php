@@ -192,25 +192,4 @@ abstract class TADHelpers
     
     return $xml;
   }
-  
-  /**
-   * Returns an array with all its items with values bases on wich ones are present in another array
-   * supplied as input.
-   * 
-   * @param array $base base array with searching criterias.
-   * @param array $values array values to be analized.
-   * @param array $options tells if generated array should be an associative one.
-   * @return array array generated.
-   */
-  public static function config_array_items(array $base, array $values, array $options=[])
-  {
-    $normalized_args = [];    
-    $include_keys = isset($options['include_keys']) && $options['include_keys'];
-    
-    foreach($base as $parseable_arg_key){
-      $normalized_args[$parseable_arg_key] = isset($values[$parseable_arg_key]) ? $values[$parseable_arg_key] : null;
-    }
-    
-    return $include_keys ? $normalized_args : array_values($normalized_args);    
-  }
 }
