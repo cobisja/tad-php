@@ -286,8 +286,44 @@ My name is [Jorge Cobis](<mailto:jcobis@gmail.com>) - <http://twitter.com/cobisj
 
 By the way, I'm from Venezuela :-)
 
-##License
-TAD-PHP s licensed under the MIT License - see the LICENSE file for details.
-
 ##Contributing
 Feel free to contribute!!!. Welcome aboard!!!
+
+##Misc
+###Version history
+**0.2.0** (Wednesday, 24th December 2014)
+
+* Some refactoring to make TADPHP\TADSAP, Providers\TADSOAP and Providers\TADZKLib classes simpler.
+* TADPHP\TADHelpers refactored to contains just methods related with TADPHP\TAD class responses.
+* Some bug fixes in test suite.
+* Some improvements in README.md
+
+
+**0.1.0** (Monday, 22nd December 2014)
+
+* Initial public release.
+
+
+##License
+Copyright (c) 2014 Jorge Cobis (<jcobis@gmail.com>)
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
