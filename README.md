@@ -50,6 +50,7 @@ You can customize TAD object traits passing an options array:
     'description' => 'TAD1', // 'N/A' by default.
     'soap_port' => 8080,     // 80 by default,
     'udp_port' => 20000      // 4370 by default.
+    'encoding' => 'utf-8'    // iso8859-1 by default.
   ];
   
   $tad_factory = new TADFactory($options);
@@ -282,15 +283,24 @@ TAD class is not perfect!!!. As mentioned at the beggining, it's been developed 
 * Enhance PHP_ZKLib to allows more sophisticated functions like uploading user's photo for example.
 
 ##Author
-My name is [Jorge Cobis](<mailto:jcobis@gmail.com>) - <http://twitter.com/cobisja>, and I'm an amateur developer. I love coding using Ruby and PHP.
+[Jorge Cobis](<mailto:jcobis@gmail.com>) - <http://twitter.com/cobisja>.
 
-By the way, I'm from Venezuela :-)
+By the way, I'm from Bolivarian Republic of Venezuela :-D
 
 ##Contributing
 Feel free to contribute!!!. Welcome aboard!!!
 
 ##Misc
 ###Version history
+**0.3.0** (Saturday, 27th December 2014)
+
+* Encoding option added to options set used when you instantiate the TADPHP\TADFactory class. With this options you can customized encoding for both SOAP requests and responses.
+* Add a new Test class (RealTADTest) the allows you to run tests against a real Time & Attendance device.
+* General refactoring according the new encoding options added.
+* Some bug fixes.
+* General code formatting to ajust it to PSR-1 and PSR-2 (it is not completed yet!).
+* Some improvements in README.md
+
 **0.2.0** (Wednesday, 24th December 2014)
 
 * Some refactoring to make TADPHP\TADSAP, Providers\TADSOAP and Providers\TADZKLib classes simpler.

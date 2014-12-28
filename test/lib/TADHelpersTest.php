@@ -10,13 +10,13 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
    */
   public function testFilterXmlByDate($xml)
   {
-    $expected_xml = "<Row><PIN>10610805</PIN><DateTime>2014-12-04 01:06:35</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row>";
+    $expected_xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse><Row><PIN>10610805</PIN><DateTime>2014-12-04 01:06:35</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row></GetAttLogResponse>';
     
     $date_range = ['start_date'=>'2014-12-03', 'end_date'=>'2014-12-04'];    
     $filtered_xml = TADHelpers::filter_xml_by_date($xml, $date_range);
-    
+
     $this->assertNotEmpty($filtered_xml);
-    $this->assertXmlStringEqualsXmlString($expected_xml, $filtered_xml);
+    $this->assertEquals( $expected_xml, $filtered_xml );
   }
   
   /**
@@ -26,8 +26,9 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
   {
     $date_range = ['start_date'=>'2014-01-01', 'end_date'=>'2014-11-29'];
     $filtered_xml = TADHelpers::filter_xml_by_date($xml, $date_range);
+    $expected_xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse>'.TADHelpers::XML_NO_DATA_FOUND.'</GetAttLogResponse>';
     
-    $this->assertXmlStringEqualsXmlString(TADHelpers::XML_NO_DATA_FOUND, $filtered_xml);
+    $this->assertEquals( $expected_xml, $filtered_xml );
   }
   
   /**
@@ -35,16 +36,16 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
    */
   public function testFilterXmlByDateWithIncompleteDateRange($date_range)
   {
-    $xml = '<Row><Foo><Bar></Bar></Foo></Row>';
-    
+    $xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse><Row><Foo><Bar></Bar></Foo></Row></GetAttLogResponse>';
     $filtered_xml = TADHelpers::filter_xml_by_date($xml, $date_range);
+    $expected_xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse>'.TADHelpers::XML_NO_DATA_FOUND.'</GetAttLogResponse>';
     
-    $this->assertEquals(TADHelpers::XML_NO_DATA_FOUND, $filtered_xml);
+    $this->assertEquals( $expected_xml, $filtered_xml );
   }     
   
   public function testFilterXmlByDateWithCustomizedRowTag()
   {
-    $xml = '<CustomTag><PIN>10610805</PIN><DateTime>2014-11-30 18:36:49</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></CustomTag>';
+    $xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse><CustomTag><PIN>10610805</PIN><DateTime>2014-11-30 18:36:49</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></CustomTag></GetAttLogResponse>';
     $filtered_xml = TADHelpers::filter_xml_by_date(
             $xml,
             ['start_date'=>'2014-11-30', 'end_date'=>'2014-11-30'],
@@ -53,20 +54,22 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
 
     $this->assertXmlStringEqualsXmlString($xml, $filtered_xml);
   }
-  
-  /**
-   * @dataProvider xmlStandardFixture
-   */
+/***  
+  /
+    @dataProvider xmlStandardFixture
+   
   public function testFilterXmlByDateWithCustomizedRootTag($xml)
   {
-    $xml = '<GetFreeSizesResponse>' . $xml . '</GetFreeSizesResponse>';
-    $expected_xml = "<GetFreeSizesResponse><Row><PIN>10610805</PIN><DateTime>2014-12-04 01:06:35</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row></GetFreeSizesResponse>";
+    $xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetFreeSizesResponse>' . $xml . '</GetFreeSizesResponse>';
+    $expected_xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetFreeSizesResponse><Row><PIN>10610805</PIN><DateTime>2014-12-04 01:06:35</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row></GetFreeSizesResponse>';
     
     $date_range = ['start_date'=>'2014-12-03', 'end_date'=>'2014-12-04'];
     $filtered_xml = TADHelpers::filter_xml_by_date($xml, $date_range);
 
     $this->assertXmlStringEqualsXmlString($expected_xml, $filtered_xml);
   }
+ * 
+ */
   
   /**
    * @dataProvider xmlAndJsonFixtures
@@ -92,14 +95,16 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
   public function testArrayToXml($sample_array, $expected_xml)
   {
     $xml = TADHelpers::array_to_xml(new \SimpleXMLElement('<root/>'), $sample_array);
-    $this->assertEquals($xml, $expected_xml);
+    $this->assertEquals($expected_xml, $xml);
   }
   
 
   public function xmlStandardFixture()
   {
     return [
-     ["
+     ['
+      <?xml version="1.0" encoding="iso8859-1" standalone="no"?>
+      <GetAttLogResponse>
       <Row><PIN>10610805</PIN><DateTime>2014-11-30 18:36:49</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row>
       <Row><PIN>2</PIN><DateTime>2014-11-30 18:43:27</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row>
       <Row><PIN>10610805</PIN><DateTime>2014-11-30 20:52:44</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row>
@@ -109,7 +114,8 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
       <Row><PIN>10610805</PIN><DateTime>2014-12-02 08:01:23</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row>
       <Row><PIN>0</PIN><DateTime>2014-12-02 08:01:32</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row>
       <Row><PIN>10610805</PIN><DateTime>2014-12-04 01:06:35</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row>
-     "]
+      </GetAttLogResponse>
+     ']
     ];
   }
   
@@ -164,13 +170,13 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
   public function arrayAndXmlFixtures()
   {
     return [
-        [ ["foo", "bar", "baz"], '<root><0>foo</0><1>bar</1><2>baz</2></root>' ],
+        [ ["foo", "bar", "baz"], '<?xml version="1.0" encoding="UTF-8" standalone="no"?><root><0>foo</0><1>bar</1><2>baz</2></root>' ],
         ['Row'=>[ 
             ['PIN'=>'99999999', 'DateTime'=>'2014-11-30 18:36:49', 'Verified'=>'0', 'Status'=>'0', 'WorkCode'=>'0'],
             ['PIN'=>'2', 'DateTime'=>'2014-11-30 18:43:27', 'Verified'=>'0', 'Status'=>'0', 'WorkCode'=>'0'],
             ['PIN'=>'11111111', 'DateTime'=>'2014-11-30 20:52:44', 'Verified'=>'0', 'Status'=>'0', 'WorkCode'=>'0']
           ],
-          "<root><0><PIN>99999999</PIN><DateTime>2014-11-30 18:36:49</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></0><1><PIN>2</PIN><DateTime>2014-11-30 18:43:27</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></1><2><PIN>11111111</PIN><DateTime>2014-11-30 20:52:44</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></2></root>"
+          '<?xml version="1.0" encoding="UTF-8" standalone="no"?><root><0><PIN>99999999</PIN><DateTime>2014-11-30 18:36:49</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></0><1><PIN>2</PIN><DateTime>2014-11-30 18:43:27</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></1><2><PIN>11111111</PIN><DateTime>2014-11-30 20:52:44</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></2></root>'
         ]
     ];
   }
