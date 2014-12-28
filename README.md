@@ -50,6 +50,7 @@ You can customize TAD object traits passing an options array:
     'description' => 'TAD1', // 'N/A' by default.
     'soap_port' => 8080,     // 80 by default,
     'udp_port' => 20000      // 4370 by default.
+    'encoding' => 'utf-8'    // iso8859-1 by default.
   ];
   
   $tad_factory = new TADFactory($options);
@@ -282,12 +283,58 @@ TAD class is not perfect!!!. As mentioned at the beggining, it's been developed 
 * Enhance PHP_ZKLib to allows more sophisticated functions like uploading user's photo for example.
 
 ##Author
-My name is [Jorge Cobis](<mailto:jcobis@gmail.com>) - <http://twitter.com/cobisja>, and I'm an amateur developer. I love coding using Ruby and PHP.
+[Jorge Cobis](<mailto:jcobis@gmail.com>) - <http://twitter.com/cobisja>.
 
-By the way, I'm from Venezuela :-)
-
-##License
-TAD-PHP s licensed under the MIT License - see the LICENSE file for details.
+By the way, I'm from Bolivarian Republic of Venezuela :-D
 
 ##Contributing
 Feel free to contribute!!!. Welcome aboard!!!
+
+##Misc
+###Version history
+**0.3.0** (Saturday, 27th December 2014)
+
+* Encoding option added to options set used when you instantiate the TADPHP\TADFactory class. With this options you can customized encoding for both SOAP requests and responses.
+* Add a new Test class (RealTADTest) the allows you to run tests against a real Time & Attendance device.
+* General refactoring according the new encoding options added.
+* Some bug fixes.
+* General code formatting to ajust it to PSR-1 and PSR-2 (it is not completed yet!).
+* Some improvements in README.md
+
+
+**0.2.0** (Wednesday, 24th December 2014)
+
+* Some refactoring to make TADPHP\TADSAP, Providers\TADSOAP and Providers\TADZKLib classes simpler.
+* TADPHP\TADHelpers refactored to contains just methods related with TADPHP\TAD class responses.
+* Some bug fixes in test suite.
+* Some improvements in README.md
+
+
+**0.1.0** (Monday, 22nd December 2014)
+
+* Initial public release.
+
+
+##License
+Copyright (c) 2014 Jorge Cobis (<jcobis@gmail.com>)
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
