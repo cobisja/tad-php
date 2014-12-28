@@ -22,9 +22,9 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
    * @depends testBuildTADZKLibIsOk
    * @dataProvider build_commands_fixtures
    */
-  public function testBuildCommandResponse($command, $result, $expected_xml, TADZKLib $zk)
+  public function testBuildCommandResponse($command, $result, $expected_xml, $encoding, TADZKLib $zk)
   {
-    $result = ClassReflection::invoke_method( $zk, 'build_command_response', [ $command, $result ] );
+    $result = ClassReflection::invoke_method( $zk, 'build_command_response', [ $command, $result, $encoding ] );
 
     $this->assertEquals($expected_xml, $result);
   }
@@ -76,11 +76,12 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
   
   public function build_commands_fixtures()
   {
+    $encoding = 'iso8859-1';
     return [
-      [ 'restart', false, '<RestartResponse><Result>1</Result><Information>Succeed!</Information></RestartResponse>'],
-      [ 'poweroff', true, '<PoweroffResponse><Result>0</Result><Information>Fail!</Information></PoweroffResponse>'],
-      [ 'foo', ['bar'=>0, 'taz'=>0], '<FooResponse><bar>0</bar><taz>0</taz></FooResponse>'],
-      [ 'foo', [], '<FooResponse><Row><Result>1</Result><Information>No data!</Information></Row></FooResponse>']
+      [ 'restart', false, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><RestartResponse><Result>1</Result><Information>Succeed!</Information></RestartResponse>', $encoding],
+      [ 'poweroff', true, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><PoweroffResponse><Result>0</Result><Information>Fail!</Information></PoweroffResponse>', $encoding],
+      [ 'foo', ['bar'=>0, 'taz'=>0], '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><FooResponse><bar>0</bar><taz>0</taz></FooResponse>', $encoding],
+      [ 'foo', [], '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><FooResponse><Row><Result>1</Result><Information>No data!</Information></Row></FooResponse>', $encoding]
     ];
   }
   

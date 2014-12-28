@@ -2,7 +2,6 @@
 namespace Test\Providers;
 
 use TADPHP\TAD;
-use TADPHP\TADHelpers;
 use Providers\TADSoap;
 use Test\Helpers\ClassReflection;
 
@@ -40,10 +39,10 @@ class TADSoapTest extends \PHPUnit_Framework_TestCase
    * @depends testBuildTADSoap
    * @dataProvider soapCommandsFixtures
    */
-  public function testBuildSoapRequest($command, array $args, $expected_soap_string, TADSoap $tad_soap)
+  public function testBuildSoapRequest($command, array $args, $expected_soap_string, $encoding, TADSoap $tad_soap)
   { 
     $args += array_fill_keys( TAD::get_valid_commands_args(), null );
-    $soap_request = $tad_soap->build_soap_request( $command, $args );
+    $soap_request = $tad_soap->build_soap_request( $command, $args, $encoding );
     
     $this->assertEquals( $expected_soap_string, $soap_request );
   }
@@ -51,6 +50,7 @@ class TADSoapTest extends \PHPUnit_Framework_TestCase
   public function testExecuteSoapRequest()
   {    
     $mock_response = '<GetUserInfoResponse></GetUserInfoResponse>';
+    $encoding = 'iso8859-1';
     
     $soap_options = $this->get_soap_options();
     
@@ -69,11 +69,11 @@ class TADSoapTest extends \PHPUnit_Framework_TestCase
       ->setMethods( null )
       ->getMock();
     
-    $response = $tad_soap->execute_soap_command(
-            'get_user_info',
-            ['com_key'=>0, 'pin'=>'123'],
-            TAD::get_valid_commands_args()
-    );
+    $args = array_fill_keys( TAD::get_valid_commands_args(), null );
+    $args['com_key'] = 0;
+    $args['pin'] = 123;
+    
+    $response = $tad_soap->execute_soap_command( 'get_user_info', $args, $encoding );
     
     $this->assertNotEmpty( $response );
   }
@@ -116,12 +116,12 @@ class TADSoapTest extends \PHPUnit_Framework_TestCase
   
   public function soapCommandsFixtures()
   {
-//    $valid_args = TAD::get_valid_commands_args();
+    $encoding = 'iso8859-1';
     
     return [
-      [ 'get_date', ['com_key'=>0], '<GetDate><ArgComKey>0</ArgComKey></GetDate>' ],
-      [ 'get_att_log', ['com_key'=>0], '<GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN></PIN></Arg></GetAttLog>' ],
-      [ 'get_att_log', ['com_key'=>0, 'pin'=>'99999999'], '<GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN>99999999</PIN></Arg></GetAttLog>' ],
+      [ 'get_date', ['com_key'=>0], '<?xml version="1.0" encoding="'. $encoding .'" standalone="no"?><GetDate><ArgComKey>0</ArgComKey></GetDate>', $encoding ],
+      [ 'get_att_log', ['com_key'=>0], '<?xml version="1.0" encoding="' . $encoding. '" standalone="no"?><GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN></PIN></Arg></GetAttLog>', $encoding ],
+      [ 'get_att_log', ['com_key'=>0, 'pin'=>'99999999'], '<?xml version="1.0" encoding="' . $encoding . '" standalone="no"?><GetAttLog><ArgComKey>0</ArgComKey><Arg><PIN>99999999</PIN></Arg></GetAttLog>', $encoding ],
       [ 'set_user_template', [
               'com_key' => 0,
               'pin' => '999',
@@ -130,7 +130,8 @@ class TADSoapTest extends \PHPUnit_Framework_TestCase
               'valid' => '1',
               'template' => 'foobartaz123'
             ],
-          '<SetUserTemplate><ArgComKey>0</ArgComKey><Arg><PIN>999</PIN><FingerID>0</FingerID><Size>514</Size><Valid>1</Valid><Template>foobartaz123</Template></Arg></SetUserTemplate>'
+          '<?xml version="1.0" encoding="' . $encoding . '" standalone="no"?><SetUserTemplate><ArgComKey>0</ArgComKey><Arg><PIN>999</PIN><FingerID>0</FingerID><Size>514</Size><Valid>1</Valid><Template>foobartaz123</Template></Arg></SetUserTemplate>',
+          $encoding
       ]
     ];
   }
