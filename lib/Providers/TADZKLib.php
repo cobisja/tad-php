@@ -71,7 +71,7 @@ class TADZKLib
     const DEVICE_GENERAL_INFO_STRING_LENGTH = 184;
 
     const XML_FAIL_RESPONSE    = 'Fail!';
-    const XML_SUCCESS_RESPONSE = 'Succeed!';
+    const XML_SUCCESS_RESPONSE = 'Successfully!';
 
     public $ip;
     public $port;
@@ -379,12 +379,14 @@ class TADZKLib
                 $response = $xml_header . '<' . $base_xml_tag . '>' . TADHelpers::XML_NO_DATA_FOUND . '</' . $base_xml_tag . '>';
                 return $response;
             }
-            $response_data = $result;
+            $response_data = ['Row'=>$result];
         } else {
             $result = !$result;
             $response_data = [
-                'Result'=> $result ? '1' : '0',
-                'Information'=>$result ? self::XML_SUCCESS_RESPONSE : self::XML_FAIL_RESPONSE
+                'Row'=>[
+                    'Result'=> $result ? '1' : '0',
+                    'Information'=>$result ? self::XML_SUCCESS_RESPONSE : self::XML_FAIL_RESPONSE
+                ]
             ];
         }
 

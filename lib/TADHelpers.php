@@ -77,22 +77,23 @@ abstract class TADHelpers
             );
 
                 $filtered_xml =
-                        (0 === count($indexes) ?
-                            self::XML_NO_DATA_FOUND :
-                            join(
-                                '',
-                                array_map(
-                                    function($index) use ($rows, $xml_init_row_tag) {
-                                        return $xml_init_row_tag . $rows[$index];
-                                    },
-                                    $indexes
-                                )
+                    (0 === count($indexes) ?
+                        self::XML_NO_DATA_FOUND :
+                        join(
+                            '',
+                            array_map(
+                                function($index) use ($rows, $xml_init_row_tag) {
+                                    return $xml_init_row_tag . $rows[$index];
+                                },
+                                $indexes
                             )
-                        );
+                        )
+                    );
         }
 
         $xml = $xml_header . $main_xml_init_tag . trim($filtered_xml) . $main_xml_end_tag;
-        return trim(str_replace([ "\n", "\r" ], '', $xml));
+//        return trim(str_replace([ "\n", "\r" ], '', $xml));
+        return static::sanitize_xml_string($xml);
     }
 
     /**
@@ -124,7 +125,7 @@ abstract class TADHelpers
      * @param array $data input array to be transformed.
      * @return string XML string generated.
      */
-    public static function array_to_xml(\SimpleXMLElement $object, array $data, $encoding='UTF-8')
+    public static function array_to_xml(\SimpleXMLElement $object, array $data, $encoding='utf-8')
     {
         foreach ($data as $key => $value) {
             if (is_array($value)) {
@@ -135,7 +136,7 @@ abstract class TADHelpers
             }
         }
 
-        $xml = trim(str_replace([ "\n", "\r", "<?xml version=\"1.0\"?>" ], ' ', $object->asXML()));
+        $xml = trim(str_replace("<?xml version=\"1.0\"?>", '', $object->asXML()));
         $xml = static::normalize_xml_string($xml, $encoding);
 
         return $xml;
@@ -148,7 +149,7 @@ abstract class TADHelpers
      * @param string $encoding encoding to set in XML header.
      * @return string XML string normalized.
      */
-    public static function normalize_xml_string($xml, $encoding = 'UTF-8')
+    public static function normalize_xml_string($xml, $encoding = 'utf-8')
     {
         if (preg_match('/^\<\?xml/', $xml)) {
             $xml=preg_filter('/encoding="([^"]+)"/', 'encoding="' . $encoding . '"', $xml);
@@ -156,8 +157,11 @@ abstract class TADHelpers
             $xml ='<?xml version="1.0" encoding="' . $encoding . '" standalone="no"?>' . $xml;
         }
 
-        $xml = trim(str_replace([ "\n", "\r" ], '', $xml));
+        return static::sanitize_xml_string($xml);
+    }
 
-        return $xml;
+    private static function sanitize_xml_string($xml)
+    {
+        return trim(str_replace([ "\n", "\r" ], '', $xml));
     }
 }

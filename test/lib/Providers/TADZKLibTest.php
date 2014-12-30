@@ -7,7 +7,7 @@ use Test\Helpers\ClassReflection;
 
 class TADZKLibTest extends \PHPUnit_Framework_TestCase
 {
-  
+
   public function testBuildTADZKLibIsOk()
   {
     $options = ['ip' => '127.0.0.1', 'udp_port' => 4370, 'connection_timeout'=>1];
@@ -15,7 +15,7 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
 
     $this->assertNotNull($zk);
     $this->assertInstanceOf('Providers\TADZKLib', $zk);
-    
+
     return $zk;
   }
   /**
@@ -28,7 +28,7 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
 
     $this->assertEquals($expected_xml, $result);
   }
-  
+
   /**
    * @depends testBuildTADZKLibIsOk
    * @dataProvider datetime_fixtures
@@ -36,13 +36,13 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
   public function testSettingUpDateIsOk($datetime, TADZKLib $zk)
   {
     $valid_datetime_keys = ['year', 'month', 'day', 'hour', 'minute', 'second'];
-    
+
     $result = ClassReflection::invoke_method( $zk, 'setup_datetime', [$datetime] );
     $result_keys = array_keys($result);
-    
+
     $this->assertEmpty( array_diff( $valid_datetime_keys, $result_keys ), 'invalid keys found!');
   }
-  
+
   /**
    * @depends testBuildTADZKLibIsOk
    */
@@ -52,11 +52,11 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
 
     $reversed_hex = ClassReflection::invoke_method($zk, 'reverse_hex', [$hex_data]);
     $reversed_reversed_hex = ClassReflection::invoke_method($zk, 'reverse_hex', [$reversed_hex]);
-    
+
     $this->assertEquals( strlen($hex_data), strlen($reversed_hex));
     $this->assertEquals( $hex_data, $reversed_reversed_hex );
   }
-  
+
   /**
    * @depends testBuildTADZKLibIsOk
    */
@@ -67,24 +67,24 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
     $dt = ['date'=>'2014-12-07', 'time'=>'14:22:51'];
     $t = ClassReflection::invoke_method($zk, 'setup_datetime', [$dt]);
     $encoded_time = ClassReflection::invoke_method($zk, 'encode_time', [$t]);
-    
+
     $this->assertInternalType('integer', $encoded_time);
-    $this->assertEquals($expected_encoded_time, $encoded_time);    
-  }  
-  
-  
-  
+    $this->assertEquals($expected_encoded_time, $encoded_time);
+  }
+
+
+
   public function build_commands_fixtures()
   {
     $encoding = 'iso8859-1';
     return [
-      [ 'restart', false, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><RestartResponse><Result>1</Result><Information>Succeed!</Information></RestartResponse>', $encoding],
-      [ 'poweroff', true, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><PoweroffResponse><Result>0</Result><Information>Fail!</Information></PoweroffResponse>', $encoding],
-      [ 'foo', ['bar'=>0, 'taz'=>0], '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><FooResponse><bar>0</bar><taz>0</taz></FooResponse>', $encoding],
+      [ 'restart', false, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><RestartResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></RestartResponse>', $encoding],
+      [ 'poweroff', true, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><PoweroffResponse><Row><Result>0</Result><Information>Fail!</Information></Row></PoweroffResponse>', $encoding],
+      [ 'foo', ['bar'=>0, 'taz'=>0], '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><FooResponse><Row><bar>0</bar><taz>0</taz></Row></FooResponse>', $encoding],
       [ 'foo', [], '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><FooResponse><Row><Result>1</Result><Information>No data!</Information></Row></FooResponse>', $encoding]
     ];
   }
-  
+
   public function datetime_fixtures()
   {
     return [
@@ -94,5 +94,5 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
       'valid_args' => [ ['date'=>'2014-12-06', 'time'=>'08:38:23'] ] ,
       'crazy_args' => [ ['foo'=>'123', 'bar'=>'abc', 'baz'=>'#$%'] ]
     ];
-  }  
+  }
 }
