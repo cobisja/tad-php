@@ -1,5 +1,4 @@
 <?php
-
 /*
  * tad-php
  *
@@ -39,14 +38,19 @@ use TADPHP\TADFactory;
 class RealTADTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * TAD real ip address.
-     * @var string
+     * @var string TAD real ip address.
      */
     private $tad_ip;
+
+    /**
+     * @var string TAD encoding.
+     */
+    private $tad_encoding;
 
     public function setUp()
     {
         $this->tad_ip = '192.168.100.156';
+        $this->tad_encoding = 'iso8859-1';
 
         if (!TAD::is_device_online($this->tad_ip)) {
             $this->markTestSkipped("Real TAD tests disabled. Device in {$this->tad_ip} is not online!");
@@ -55,7 +59,7 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
 
     public function testDeviceIsOnLine()
     {
-        $tad_options = [ 'ip'=>$this->tad_ip, 'encoding'=>'iso8859-1' ];
+        $tad_options = [ 'ip' => $this->tad_ip, 'encoding' => $this->tad_encoding ];
         $tad = (new TADFactory($tad_options))->get_instance();
 
         $this->assertNotNull($tad);
@@ -85,7 +89,7 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
     {
         $date = '2000-01-01';
         $time = '12:15:30';
-        $expected_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><SetDateResponse><Result>1</Result><Information>Succeed!</Information></SetDateResponse>';
+        $expected_response = $this->build_expected_response('SetDateResponse');
 
         $response = $tad->set_date(['date'=>$date, 'time'=>$time]);
         $this->assertEquals($expected_response, $response);
@@ -114,9 +118,9 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
         $free_sizes = $tad->get_free_sizes();
         $xml_object = new \SimpleXMLElement($free_sizes);
 
-        $this->assertEquals($expected_free_sizes_items, $xml_object->count());
+        $this->assertEquals($expected_free_sizes_items, $xml_object->Row->children()->count());
 
-        $free_sizes_array = TADHelpers::xml_to_array($free_sizes);
+        $free_sizes_array = TADHelpers::xml_to_array($free_sizes)['Row'];
         $free_sizes_keys = array_keys($free_sizes_array);
 
         $this->assertTrue($expected_free_sizes_keys === $free_sizes_keys);
@@ -134,18 +138,16 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
             'privilege' => 0,
         ];
 
-        $expected_set_user_info_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><SetUserInfoResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></SetUserInfoResponse>';
-        $expected_delete_user_info_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><DeleteUserResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></DeleteUserResponse>';
+        $expected_set_user_info_response = $this->build_expected_response('SetUserInfoResponse');
+        $expected_delete_user_info_response = $this->build_expected_response('DeleteUserResponse');
 
         $fs = $tad->get_free_sizes();
-        $xml_object = new \SimpleXMLElement($fs);
-        $total_users_before = (integer) $xml_object->users_stored;
+        $total_users_before = (integer) TADHelpers::xml_to_array($fs)['Row']['users_stored'];
 
         $set_user_info_response = $tad->set_user_info($user_info);
 
         $fs = $tad->get_free_sizes();
-        $xml_object = new \SimpleXMLElement($fs);
-        $total_users_after = (integer) $xml_object->users_stored;
+        $total_users_after = (integer) TADHelpers::xml_to_array($fs)['Row']['users_stored'];
 
         $delete_user_response = $tad->delete_user([ 'pin' => $user_info['pin'] ]);
 
@@ -185,8 +187,7 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
     public function testGetAllUserInfo(TAD $tad)
     {
         $fs = $tad->get_free_sizes();
-        $xml_object = new \SimpleXMLElement($fs);
-        $total_users = (integer) $xml_object->users_stored;
+        $total_users = (integer) TADHelpers::xml_to_array($fs)['Row']['users_stored'];
 
         $all_user_info_response = $tad->get_all_user_info();
 
@@ -207,7 +208,7 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
             'privilege' => 0,
         ];
 
-        $expected_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><ClearUserPasswordResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></ClearUserPasswordResponse>';
+        $expected_response = $this->build_expected_response('ClearUserPasswordResponse');
 
         $tad->set_user_info($user_info);
 
@@ -243,9 +244,9 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
           'template' => $template1_vx9
         ];
 
-        $no_template_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetUserTemplateResponse><Row><Result>1</Result><Information>No data!</Information></Row></GetUserTemplateResponse>';
-        $expected_set_user_template_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><SetUserTemplateResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></SetUserTemplateResponse>';
-        $expected_delete_template_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><DeleteTemplateResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></DeleteTemplateResponse>';
+        $no_template_response = $this->build_expected_response('GetUserTemplateResponse', 'No data!');
+        $expected_set_user_template_response = $this->build_expected_response('SetUserTemplateResponse');
+        $expected_delete_template_response = $this->build_expected_response('DeleteTemplateResponse');
 
         // Create a test user.
         $tad->set_user_info($user_info);
@@ -287,14 +288,14 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
             'privilege' => 14, // Superadmin.
         ];
 
-        $expected_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><DeleteAdminResponse><Result>1</Result><Information>Succeed!</Information></DeleteAdminResponse>';
+        $expected_response = $this->build_expected_response('DeleteAdminResponse');
 
         $tad->set_user_info($user_info);
 
         $response = $tad->delete_admin();
 
         $fs = $tad->get_free_sizes();
-        $total_admins = (integer) TADHelpers::xml_to_array($fs)['admins_stored'];
+        $total_admins = (integer) TADHelpers::xml_to_array($fs)['Row']['admins_stored'];
         $tad->delete_user(['pin'=>$user_info['pin']]);
 
         $this->assertEquals($expected_response, $response);
@@ -306,15 +307,27 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
      */
     public function testRestartDevice(TAD $tad)
     {
-        $expected_response = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><RestartResponse><Result>1</Result><Information>Succeed!</Information></RestartResponse>';
+        $expected_response = $this->build_expected_response('RestartResponse');
         $device_ip = $tad->get_ip();
 
         $response = $tad->restart();
 
-        sleep(2); // Let give it a few seconds to test if it's online.
+        sleep(2); // Lets give it a few seconds to test if it's online.
         $is_device_online = TAD::is_device_online($device_ip);
 
         $this->assertEquals($expected_response, $response);
         $this->assertNotTrue($is_device_online);
+    }
+
+    private function build_expected_response($base_tag, $information = 'Successfully!')
+    {
+        $xml_header = '<?xml version="1.0" encoding="' . $this->tad_encoding. '" standalone="no"?>';
+        $base_response = "<Row><Result>1</Result><Information>$information</Information></Row>";
+        $open_tag = "<$base_tag>";
+        $end_tag = "</$base_tag>";
+
+        $expected_response = $xml_header . $open_tag . $base_response . $end_tag;
+
+        return $expected_response;
     }
 }
