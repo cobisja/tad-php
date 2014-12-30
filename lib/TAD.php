@@ -128,23 +128,17 @@ class TAD
     ];
 
     /**
-     * Device ip address.
-     *
-     * @var string
+     * @var string Device ip address.
      */
     private $ip;
 
     /**
-     * Device internal id.
-     *
-     * @var mixed
+     * @var mixed Device internal id.
      */
     private $internal_id;
 
     /**
-     * Device description (just for info purposes).
-     *
-     * @var string
+     * @var string Device description (just for info purposes).
      */
     private $description;
 
@@ -156,18 +150,19 @@ class TAD
     private $com_key;
 
     /**
-     * Connection timeout in seconds.
-     *
-     * @var int
+     * @var int Connection timeout in seconds.
      */
     private $connection_timeout;
 
     /**
-     * Encoding for XML commands and responses.
-     *
-     * @var type
+     * @var string Encoding for XML commands and responses.
      */
     private $encoding;
+
+    /**
+     * @var int UDP port number.
+     */
+    private $udp_port;
 
     /**
      * Holds a <code>TADSoap</code> instance to talk to device via SOAP.
@@ -183,6 +178,16 @@ class TAD
      */
     private $zklib;
 
+
+    /**
+     * Returns an array with a full list of commands available.
+     *
+     * @return array list of commands available.
+     */
+    public static function commands_available()
+    {
+        return array_merge(static::soap_commands_available(), static::zklib_commands_available());
+    }
 
     /**
      * Returns an array with SOAP commands list available.
@@ -241,11 +246,12 @@ class TAD
     public function __construct(TADSoap $soap_provider, TADZKLib $zklib_provider, array $options = [])
     {
         $this->ip = $options['ip'];
-        $this->internal_id = $options['internal_id'];
-        $this->com_key = $options['com_key'];
+        $this->internal_id = (integer) $options['internal_id'];
+        $this->com_key = (integer) $options['com_key'];
         $this->description = $options['description'];
-        $this->connection_timeout = $options['connection_timeout'];
-        $this->encoding = $options['encoding'];
+        $this->connection_timeout = (integer) $options['connection_timeout'];
+        $this->encoding = strtolower($options['encoding']);
+        $this->udp_port = (integer) $options['udp_port'];
 
         $this->tad_soap = $soap_provider;
         $this->zklib = $zklib_provider;
@@ -321,7 +327,7 @@ class TAD
     }
 
     /**
-     * Returns device IP address.
+     * Returns device's IP address.
      *
      * @return string IP address.
      */
@@ -331,7 +337,7 @@ class TAD
     }
 
     /**
-     * Returns internal device code.
+     * Returns device's internal code.
      *
      * @return int internal code.
      */
@@ -341,7 +347,7 @@ class TAD
     }
 
     /**
-     * Returns device comm code.
+     * Returns device's comm code.
      *
      * @return int code.
      */
@@ -351,7 +357,7 @@ class TAD
     }
 
     /**
-     * Returns device string description.
+     * Returns device's string description.
      *
      * @return string device description.
      */
@@ -361,7 +367,37 @@ class TAD
     }
 
     /**
-     * Tells is device is ready (alive) to process requests.
+     * Returns device's connection timeout.
+     *
+     * @return int connection timeout.
+     */
+    public function get_connection_timeout()
+    {
+        return $this->connection_timeout;
+    }
+
+    /**
+     * Returns device's encoding (used for SOAP requests and responses).
+     *
+     * @return string encoding.
+     */
+    public function get_encoding()
+    {
+        return $this->encoding;
+    }
+
+    /**
+     * Return device's UDP port number.
+     *
+     * @return int port number.
+     */
+    public function get_udp_port()
+    {
+        return $this->udp_port;
+    }
+
+    /**
+     * Tells if device is ready (alive) to process requests.
      *
      * @return boolean <b>true</b> if device is alive, <b>false</b> otherwise.
      */
@@ -394,7 +430,7 @@ class TAD
      */
     private function check_for_valid_command($command)
     {
-        $tad_commands = array_merge(static::zklib_commands_available(), static::soap_commands_available());
+        $tad_commands = static::commands_available();
 
         if (!in_array($command, $tad_commands)) {
             throw new UnrecognizedCommand("Comando $command no reconocido!");
