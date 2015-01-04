@@ -191,7 +191,8 @@ class RealTADTest extends \PHPUnit_Framework_TestCase
 
         $all_user_info_response = $tad->get_all_user_info();
 
-        $all_user_info_items = count(TADHelpers::xml_to_array($all_user_info_response)['Row']);
+        $xml = new \SimpleXMLElement($all_user_info_response);
+        $all_user_info_items = $xml->count();
 
         $this->assertEquals($total_users, $all_user_info_items);
     }

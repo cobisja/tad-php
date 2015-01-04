@@ -12,7 +12,7 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
   {
     $expected_xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse><Row><PIN>10610805</PIN><DateTime>2014-12-04 01:06:35</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row></GetAttLogResponse>';
 
-    $date_range = ['start_date'=>'2014-12-03', 'end_date'=>'2014-12-04'];
+    $date_range = ['start'=>'2014-12-03', 'end'=>'2014-12-04'];
     $filtered_xml = TADHelpers::filter_xml_by_date($xml, $date_range);
 
     $this->assertNotEmpty($filtered_xml);
@@ -24,7 +24,7 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
    */
   public function testFilterXmlByDateWithDateRangeNotPresentInXml($xml)
   {
-    $date_range = ['start_date'=>'2014-01-01', 'end_date'=>'2014-11-29'];
+    $date_range = ['start'=>'2014-01-01', 'end'=>'2014-11-29'];
     $filtered_xml = TADHelpers::filter_xml_by_date($xml, $date_range);
     $expected_xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse>'.TADHelpers::XML_NO_DATA_FOUND.'</GetAttLogResponse>';
 
@@ -42,13 +42,13 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
 
     $this->assertEquals( $expected_xml, $filtered_xml );
   }
-
+/*
   public function testFilterXmlByDateWithCustomizedRowTag()
   {
     $xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetAttLogResponse><CustomTag><PIN>10610805</PIN><DateTime>2014-11-30 18:36:49</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></CustomTag></GetAttLogResponse>';
     $filtered_xml = TADHelpers::filter_xml_by_date(
             $xml,
-            ['start_date'=>'2014-11-30', 'end_date'=>'2014-11-30'],
+            ['start'=>'2014-11-30', 'end'=>'2014-11-30'],
             '<CustomTag>'
     );
 
@@ -63,7 +63,7 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
     $xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetFreeSizesResponse>' . $xml . '</GetFreeSizesResponse>';
     $expected_xml = '<?xml version="1.0" encoding="iso8859-1" standalone="no"?><GetFreeSizesResponse><Row><PIN>10610805</PIN><DateTime>2014-12-04 01:06:35</DateTime><Verified>0</Verified><Status>0</Status><WorkCode>0</WorkCode></Row></GetFreeSizesResponse>';
 
-    $date_range = ['start_date'=>'2014-12-03', 'end_date'=>'2014-12-04'];
+    $date_range = ['start'=>'2014-12-03', 'end'=>'2014-12-04'];
     $filtered_xml = TADHelpers::filter_xml_by_date($xml, $date_range);
 
     $this->assertXmlStringEqualsXmlString($expected_xml, $filtered_xml);
@@ -123,8 +123,8 @@ class TADHelpersTest extends \PHPUnit_Framework_TestCase
   {
     return [
         [ [] ],
-        [ [ 'start_date' => '2014-01-01' ] ],
-        [ [ 'end_date' => '2014-01-31' ] ]
+        [ [ 'start' => '2014-01-01' ] ],
+        [ [ 'end' => '2014-01-31' ] ]
     ];
   }
 
