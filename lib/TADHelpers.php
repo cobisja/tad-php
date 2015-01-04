@@ -27,74 +27,14 @@
 
 namespace TADPHP;
 
+use TADPHP\Exceptions\FilterArgumentError;
+
 /**
  * TADHelpers: Abstract class that provides with several useful helpers.
  */
 abstract class TADHelpers
 {
     const XML_NO_DATA_FOUND = '<Row><Result>1</Result><Information>No data!</Information></Row>';
-
-    /**
-     * Parses an XML string searchig for datetime data to filter it based on date criteria supplied.
-     *
-     * @param string $xml input XML string.
-     * @param array $range date searching criteria.
-     * @param string $xml_init_row_tag XML root tag.
-     * @return string XML string filtered.
-     */
-    public static function filter_xml_by_date($xml, array $range=[], $xml_init_row_tag='<Row>')
-    {
-        $xml_header = '';
-        if (false !== strpos($xml, '?>')) {
-            $xml_items = explode('?>', $xml);
-
-            $xml_header = $xml_items[0] . '?>';
-            $xml = $xml_items[1];
-        }
-
-        $matches = [];
-        $filtered_xml = self::XML_NO_DATA_FOUND;
-
-        $rows = explode($xml_init_row_tag, $xml);
-        $main_xml_init_tag = trim(array_shift($rows));
-        $main_xml_end_tag = '' !== $main_xml_init_tag  ? '</' . str_replace('<', '', $main_xml_init_tag) : '';
-
-        if ('' !== $main_xml_end_tag) {
-            $rows[] = str_replace($main_xml_end_tag, '', array_pop($rows));
-        }
-
-        if (isset($range['start_date']) &&
-            isset($range['end_date']) &&
-            preg_match_all('/<DateTime>([0-9]{4}-[0-9]{2}-[0-9]{2}).+<\/DateTime>/', $xml, $matches)) {
-            $indexes = array_keys(
-                array_filter(
-                    $matches[1],
-                    function($date) use ($range) {
-                        return !(strcmp($date, $range['start_date']) < 0 ||
-                                 strcmp($date, $range['end_date']) > 0);
-                    }
-                )
-            );
-
-                $filtered_xml =
-                    (0 === count($indexes) ?
-                        self::XML_NO_DATA_FOUND :
-                        join(
-                            '',
-                            array_map(
-                                function($index) use ($rows, $xml_init_row_tag) {
-                                    return $xml_init_row_tag . $rows[$index];
-                                },
-                                $indexes
-                            )
-                        )
-                    );
-        }
-
-        $xml = $xml_header . $main_xml_init_tag . trim($filtered_xml) . $main_xml_end_tag;
-//        return trim(str_replace([ "\n", "\r" ], '', $xml));
-        return static::sanitize_xml_string($xml);
-    }
 
     /**
      * Transforms an XML string into a JSON format.
@@ -142,6 +82,130 @@ abstract class TADHelpers
         return $xml;
     }
 
+    public static function __callStatic($method, $args)
+    {
+        $xml = count($args) === 0 ? [] : array_shift($args);
+
+        if (preg_match('/filter_xml_by_([a-zA-Z]+)/', $method)) {
+            $filters = preg_split('/(by_|_and_)/i', $method, -1);
+            unset($filters[0]);
+
+            if (count($filters) !== count($args)) {
+                throw new FilterArgumentError(
+                    'Invalid number of arguments: '
+                    . count($filters) . ' expected, '
+                    . count($args) . ' given.'
+                );
+            }
+
+            foreach ($filters as $filter) {
+                $filter_args = static::normalize_filter_args(array_shift($args));
+
+                switch ($filter) {
+                    case 'date':
+                        $filter_regex = '/<DateTime>([0-9]{4}-[0-9]{2}-[0-9]{2})/';
+                        break;
+                    case 'time':
+                        $filter_regex = '/([0-9]{2}:[0-9]{2}:[0-9]{2})<\/DateTime>/';
+                        break;
+                    case 'datetime':
+                        $filter_regex = '/<DateTime>([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})<\/DateTime>/';
+                        break;
+                    case 'pin':
+                    case 'pin2':
+                        $filter_regex = '/<PIN>([0-9]+)<\/PIN>/';
+                        break;
+                    case 'status':
+                        $filter_regex = '/<Status>([0-9]+)<\/Status>/';
+                        break;
+                    case 'privilege':
+                        $filter_regex = '/<Privilege>([0-9]+)<\/Privilege>/';
+                        break;
+                    case 'card':
+                        $filter_regex = '/<Card>([0-9]+)<\/Card>/';
+                        break;
+                }
+
+                $xml = static::filter_xml($xml, $filter_regex, $filter_args);
+            }
+
+            return $xml;
+        } else {
+            throw new \Exception('Unknown method ' . $method);
+        }
+    }
+
+    /**
+     * Parses an XML string applying a specific filter.
+     *
+     * @param string $xml input XML string.
+     * @param string $filter regex to be applied on input.
+     * @param array $range boundaries searching criteria.
+     * @param string $xml_init_row_tag XML root tag.
+     * @return string XML string filtered.
+     */
+    public static function filter_xml($xml, $filter, array $range=[], $xml_init_row_tag='<Row>')
+    {
+        $xml_header = '';
+        if (false !== strpos($xml, '?>')) {
+            $xml_items = explode('?>', $xml);
+
+            $xml_header = $xml_items[0] . '?>';
+            $xml = $xml_items[1];
+        }
+
+        $matches = [];
+        $filtered_xml = self::XML_NO_DATA_FOUND;
+
+        $rows = explode($xml_init_row_tag, $xml);
+        $main_xml_init_tag = trim(array_shift($rows));
+        $main_xml_end_tag = '' !== $main_xml_init_tag  ? '</' . str_replace('<', '', $main_xml_init_tag) : '';
+
+        if ('' !== $main_xml_end_tag) {
+            $rows[] = str_replace($main_xml_end_tag, '', array_pop($rows));
+        }
+
+        if (preg_match_all($filter, $xml, $matches)) {
+            $indexes = array_keys(
+                array_filter(
+                    $matches[1],
+                    function($data) use ($range) {
+                        switch (count($range)) {
+                            case 1:
+                                if (isset($range['start'])) {
+                                    return strcmp($data, $range['start']) >= 0;
+                                } else {
+                                    return strcmp($data, $range['start']) <= 0;
+                                }
+                                break;
+                            case 2:
+                                return !(strcmp($data, $range['start']) < 0 ||
+                                         strcmp($data, $range['end']) > 0);
+                        }
+                    }
+                )
+            );
+
+                $filtered_xml = (
+                    0 === count($indexes) ?
+                    self::XML_NO_DATA_FOUND :
+                    join(
+                        '',
+                        array_map(
+                            function($index) use ($rows, $xml_init_row_tag) {
+                                return $xml_init_row_tag . $rows[$index];
+                            },
+                            $indexes
+                        )
+                    )
+                );
+        }
+
+        $xml = $xml_header . $main_xml_init_tag . trim($filtered_xml) . $main_xml_end_tag;
+
+        return static::sanitize_xml_string($xml);
+    }
+
     /**
      * Adds XML header to an XML string.
      *
@@ -160,8 +224,43 @@ abstract class TADHelpers
         return static::sanitize_xml_string($xml);
     }
 
+    /**
+     * Cleans a XML string from undesired chars (in this case EOL).
+     * @param string $xml string to be cleaned out.
+     * @return string XML string cleaned out.
+     */
     private static function sanitize_xml_string($xml)
     {
         return trim(str_replace([ "\n", "\r" ], '', $xml));
+    }
+
+    /**
+     * Sets boundaries to be used as filter criteria.
+     * @param mixed $args boundaries.
+     * @return array boundaries validated.
+     */
+    private static function normalize_filter_args($args)
+    {
+        $normalized_filter_args = [];
+        $valid_range_filter = ['start', 'end'];
+
+        if (is_array($args)) {
+            array_walk(
+                array_keys($args),
+                function ($item) use ($valid_range_filter) {
+                    if (!in_array($item, $valid_range_filter)) {
+                        throw new FilterArgumentError('Invalid range key ' . $item);
+                    }
+                }
+            );
+
+            isset($args['start']) ? $normalized_filter_args['start'] = $args['start'] : null;
+            isset($args['end']) ? $normalized_filter_args['end'] = $args['end'] : null;
+
+        } else {
+            $normalized_filter_args['start'] = $normalized_filter_args['end'] = $args;
+        }
+
+        return $normalized_filter_args;
     }
 }
