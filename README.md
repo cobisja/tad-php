@@ -4,7 +4,7 @@ A simple PHP class to interacts with ZK Time & Attendance Devices.
 
 ##About
 
-TAD: It's a class that implements an interface to interacts with ZK Time & Atttendance devices, using SOAP api presents in those devices.
+TAD: A class that implements an interface to interacts with ZK Time & Atttendance devices.
 
 Documentation found about ZK SOAP api is very limited or poor, however TAD class implements most SOAP functions supported by ZK devices. Specifically TAD class exposes the following 21 methods:
 
@@ -20,8 +20,12 @@ PHP_ZKLib class it's been fully integrated, after a refactoring process taking o
 For practical purposes, you don't have to be worried about when to use TAD class or PHP_ZKLib class because you only have to get a TAD instance (as shown below) and call any of its methods available. The class decides about when runs the method invoked using TAD class or PHP_ZKLib class.
 
 ##Requirements
-* Any flavour of PHP 5.3+
+* Any flavour of PHP 5.4+
 * PHPUnit to execute the test suite (optional).
+
+## Supported devices
+
+* All ZK Time & Attendance devices with web server built-in (with ZEM600 or less).
 
 ##Getting started
 ###Class instantiation
@@ -55,7 +59,7 @@ You can customize TAD object traits passing an options array:
 ##TAD API
 SOAP api is implemented by TADSoap class. All methods that use UDP Protocol are implemented by PHP_ZKLib class. Even though you have 2 classes, you do not have to be worried about which method is been calling using SOAP api or through PHP_ZKLib. You've got a single interface.
 
-Some methods need you set up some parameters prior you can call them. TAD class uses associative arrays as way to pass params to the methods. Using associative arrays is a more "verbose" way and help you to remember which params you have to pass.
+Some methods need you set up some parameters prior you can call them. TAD class uses associative arrays as way to pass params to the methods. Using associative arrays is a "more verbose way" that helps you to remember which params you have to pass.
 
 Valid params supported by TAD class are:
 
@@ -250,24 +254,37 @@ $tad->poweroff();
 ##A little word about TAD Helpers
 Besides TAD class, you'll find another class named TADHelpers, as it's name suggests, that has several methods to help you with some common functions.
 
-###Filtering attendance logs by date
-As you saw above, you can get attendance logs from the device using method get_att_logs(). However, you get all attendance logs. As much as you can reduce resultset specifying a user's PIN.
+###Filtering XML according your needs!!!
+As you saw above, all device's responses are in XML format. You get the raw XML and sometimes you'd like to do some kind of processing on reponses. Now, you can process the whole XML response by applying filters. This way, you can get just XML responses that really needs.
 
-What if you want to get just attendance logs (for 1 user or all users) that meet a date criteria?. Well, you can get it!!!.
 ```php
 // Get attendance logs for all users;
 $att_logs = $tad->get_att_logs();
 
 // Now, you want filter the resulset to get att logs between '2014-01-10' and '2014-03-20'.
-$filtered_att_logs = TADHelpers::filter_xml_by_date( [
-	'start_date' => '2014-01-10',
-    'end_date' => '2014-03-20
-] );
+$filtered_att_logs = TADHelpers::filter_xml_by_date(
+	$att_logs,
+    ['start' => '2014-01-10','end' => '2014-03-20']
+);
+
+// Maybe you need to be more specific: get logs of users with privilege of Enroller
+// that generated a 'check-out' event after '2014-08-01'.
+$filtered_att_logs = TADHelpers::filter_xml_by_privilege_and_status_and_date(
+	$att_logs,
+    2, // 2 = Enroller role.
+    1, // 1 = Check-out.
+    ['start'] => '2014-08-01
+);
 ```
 
-Of course as you can suppose, the devices gives you all attendance logs (it has not a built-in SOAP call to filter results by date!!!). 
+Notes:
 
-TADHelper class offers ***filter_xml_by_date()*** method to process the whole resulset.
+* XML response is passed as first parameter.
+* When you want to specify specific ranges you have to use an associative array with keys **'start'** (indicates where range begins), and **'end'** (where range ends).
+* **greater than** ranges are indicated by passing only **'start'** key.
+* **less than** ranges are indicated by passing only **'end'** key.
+* To filter by an exact value you have to pass just the value (not an array!). However, if by any reason you decides to use an array, both keys have to have the same value.
+* If you want to build a very specific filter, you have to use **filter_xml()** method. Using it, you are able to built a customized regex to define how the XML have to be processed.
 
 ###Don't want to fight with XML?, ..., just don't do it
 TAD class always returns responses in XML format, that is its behavior!. TADHelper class offers you methods to transform XML to JSON or even into Array.
@@ -285,6 +302,7 @@ $att_logs_array = TADHelpers::xml_to_array($att_logs).
 ##Todo
 TAD class is not perfect!!!. As mentioned at the beggining, it's been developed after hours, and hours, and hours of googling and it's been tested using just Fingertec Q2i Time & attendance device (that it's I have in my work), so it's possible that you can find errors when you use it with others devices or even you can find better ways to do the things. For that reason, there are some things to do:
 
+* Make TAD-PHP works perfectly on devices with ZEM greater than 600 (with ZEM800 almost everything works as expected, but there are still some bugs).
 * Make set_user_info() method works with BioBridge VX 10.0 algorithm.
 * Find out how to customize the PIN code generation in the PHP_ZKLib zk_set_user_info() method.
 * Test TAD method get_option(). This method allows you getting detailed information about the device, but it's necessary to set its argument to a valid option name. However, these names are not available, and according to documentation ZK Software can give you all options names but you have to pay for them.
@@ -300,6 +318,20 @@ Feel free to contribute!!!. Welcome aboard!!!
 
 ##Misc
 ###Version history
+** 0.3.2** (Saturday, 3rd January 2015)
+
+* Implemented a ***dynamic xml filter*** that allows you to build single or multiple filtering criterias based on XML tags of response.
+* Refactoring of tests.
+* Some bug fixes in documentation.
+
+**0.3.1** (Monday, 29th December 2014)
+
+* Some improvements in README.md.
+* Refactored XML response generated by Providers\TADZKLib class.
+* Some refactoring in tests to ajust them to the refactored XML response generated by Providers\TADZKLib class.
+* Tests DRYed.
+* Some bug fixtures.
+
 **0.3.0** (Saturday, 27th December 2014)
 
 * Encoding option added to options set used when you instantiate the TADPHP\TADFactory class. With this options you can customized encoding for both SOAP requests and responses.
