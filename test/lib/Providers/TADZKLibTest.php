@@ -1,7 +1,7 @@
 <?php
 namespace Test\Providers;
 
-use Providers\TADZKLib;
+use TADPHP\Providers\TADZKLib;
 use Test\Helpers\ClassReflection;
 
 
@@ -14,7 +14,7 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
     $zk = new TADZKLib( $options );
 
     $this->assertNotNull($zk);
-    $this->assertInstanceOf('Providers\TADZKLib', $zk);
+    $this->assertInstanceOf('TADPHP\Providers\TADZKLib', $zk);
 
     return $zk;
   }
@@ -22,9 +22,9 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
    * @depends testBuildTADZKLibIsOk
    * @dataProvider build_commands_fixtures
    */
-  public function testBuildCommandResponse($command, $result, $expected_xml, $encoding, TADZKLib $zk)
+  public function testBuildCommandResponse($command, $result_code, $result, $expected_xml, $encoding, TADZKLib $zk)
   {
-    $result = ClassReflection::invoke_method( $zk, 'build_command_response', [ $command, $result, $encoding ] );
+    $result = ClassReflection::invoke_method($zk, 'build_command_response', [ $command, $result_code, $result, $encoding ]);
 
     $this->assertEquals($expected_xml, $result);
   }
@@ -78,10 +78,10 @@ class TADZKLibTest extends \PHPUnit_Framework_TestCase
   {
     $encoding = 'iso8859-1';
     return [
-      [ 'restart', false, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><RestartResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></RestartResponse>', $encoding],
-      [ 'poweroff', true, '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><PoweroffResponse><Row><Result>0</Result><Information>Fail!</Information></Row></PoweroffResponse>', $encoding],
-      [ 'foo', ['bar'=>0, 'taz'=>0], '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><FooResponse><Row><bar>0</bar><taz>0</taz></Row></FooResponse>', $encoding],
-      [ 'foo', [], '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?><FooResponse><Row><Result>1</Result><Information>No data!</Information></Row></FooResponse>', $encoding]
+      [ 'restart', true, true, '<RestartResponse><Row><Result>1</Result><Information>Successfully!</Information></Row></RestartResponse>', $encoding],
+      [ 'poweroff', false, false, '<PoweroffResponse><Row><Result>0</Result><Information>Fail!</Information></Row></PoweroffResponse>', $encoding],
+      [ 'foo', true, ['bar'=>0, 'taz'=>0], '<FooResponse><Row><bar>0</bar><taz>0</taz></Row></FooResponse>', $encoding],
+      [ 'foo', true, [], '<FooResponse></FooResponse>', $encoding]
     ];
   }
 
