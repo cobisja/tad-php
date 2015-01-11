@@ -27,11 +27,10 @@
 
 namespace Test;
 
-use TADPHP\TADFactory;
 use TADPHP\TAD;
-
-use Providers\TADSoap;
-use Providers\TADZKLib;
+use TADPHP\TADFactory;
+use TADPHP\Providers\TADSoap;
+use TADPHP\Providers\TADZKLib;
 
 class TADTest extends \PHPUnit_Framework_TestCase
 {
@@ -134,13 +133,11 @@ class TADTest extends \PHPUnit_Framework_TestCase
           ->will($this->returnValue('<CommandResponse>Executed via ZKLib</CommandResponse>'));
 
         $this->assertEquals(
-            '<?xml version="1.0" encoding="iso8859-1" standalone="no"?>'
-            . '<CommandResponse>Executed via SOAP</CommandResponse>',
+            '<CommandResponse>Executed via SOAP</CommandResponse>',
             $tad->get_date()
         );
         $this->assertEquals(
-            '<?xml version="1.0" encoding="iso8859-1" standalone="no"?>'
-            . '<CommandResponse>Executed via ZKLib</CommandResponse>',
+            '<CommandResponse>Executed via ZKLib</CommandResponse>',
             $tad->set_date()
         );
     }
@@ -152,7 +149,7 @@ class TADTest extends \PHPUnit_Framework_TestCase
 
         $soap_client = new \SoapClient(null, $options['soap']);
 
-        $tad_soap = $this->getMockBuilder('Providers\TADSoap')
+        $tad_soap = $this->getMockBuilder('TADPHP\Providers\TADSoap')
           ->setConstructorArgs([ $soap_client, $options['soap'] ])
           ->setMethods(['execute_soap_command'])
           ->getMock();
@@ -183,9 +180,9 @@ class TADTest extends \PHPUnit_Framework_TestCase
                 . '</SetDateResponse>';
 
         $soap_client = new \SoapClient(null, $options['soap']);
-        $tad_soap = new \Providers\TADSoap($soap_client, $options['soap']);
+        $tad_soap = new TADSoap($soap_client, $options['soap']);
 
-        $zk = $this->getMockBuilder('\Providers\TADZKLib')
+        $zk = $this->getMockBuilder('TADPHP\Providers\TADZKLib')
           ->setConstructorArgs([ $options['tad'] ])
           ->setMethods(['__call'])
           ->getMock();
