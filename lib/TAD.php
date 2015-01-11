@@ -27,8 +27,8 @@
 
 namespace TADPHP;
 
-use Providers\TADSoap;
-use Providers\TADZKLib;
+use TADPHP\Providers\TADSoap;
+use TADPHP\Providers\TADZKLib;
 use TADPHP\Exceptions\ConnectionError;
 use TADPHP\Exceptions\UnrecognizedArgument;
 use TADPHP\Exceptions\UnrecognizedCommand;
@@ -165,6 +165,11 @@ class TAD
     private $udp_port;
 
     /**
+     * @var string Original response from device.
+     */
+    private $last_response;
+
+    /**
      * Holds a <code>TADSoap</code> instance to talk to device via SOAP.
      *
      * @var object
@@ -290,7 +295,7 @@ class TAD
 
         $this->check_for_refresh_tad_db($command);
 
-        return $this->normalize_response($response);
+        return $response;
     }
 
     /**
@@ -484,15 +489,5 @@ class TAD
         }
 
         return $normalized_args;
-    }
-
-    /**
-     * Add a standard XML header to response.
-     * @param string $response XML string.
-     * @return string XML response with a standard header.
-     */
-    private function normalize_response($response)
-    {
-        return TADHelpers::normalize_xml_string($response, $this->encoding);
     }
 }

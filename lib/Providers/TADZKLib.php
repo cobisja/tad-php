@@ -25,9 +25,9 @@
  * THE SOFTWARE.
  */
 
-namespace Providers;
+namespace TADPHP\Providers;
 
-use TADPHP\TADHelpers;
+use TADPHP\TADResponse;
 
 /**
  * TADZKlib: class that allows to interact with a Time & Attendance device using UDP protocol.
@@ -36,7 +36,6 @@ use TADPHP\TADHelpers;
  *
  * This class has been modified by refactoring most of methods, taking out all duplicated code. The
  * original behavior it's been kept.
- *
  */
 class TADZKLib
 {
@@ -73,28 +72,40 @@ class TADZKLib
     const XML_FAIL_RESPONSE    = 'Fail!';
     const XML_SUCCESS_RESPONSE = 'Successfully!';
 
-    public $ip;
-    public $port;
-    public $zkclient;
+    private $ip;
+    private $port;
+    private $zkclient;
 
-    public $data_recv = '';
-    public $session_id = 0;
-    public $userdata = [];
-    public $attendancedata = [];
+    private $data_recv = '';
+    private $session_id = 0;
 
+    private $result;
 
     static private $zklib_commands = [
         'set_date'        => ['command_id' => self::CMD_SET_TIME,      'command_string' => self::CUSTOMIZED_COMMAND_STRING, 'should_disconnect' => true],
-        'enable_device'   => ['command_id' => self::CMD_ENABLEDEVICE,  'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
-        'disable_device'  => ['command_id' => self::CMD_DISABLEDEVICE, 'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => false],
+        'enable'          => ['command_id' => self::CMD_ENABLEDEVICE,  'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
+        'disable'         => ['command_id' => self::CMD_DISABLEDEVICE, 'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => false],
         'restart'         => ['command_id' => self::CMD_RESTART,       'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
         'poweroff'        => ['command_id' => self::CMD_POWEROFF,      'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
-//        'set_user_info'   => ['command_id' => self::CMD_RESTART,       'command_string' => self::CUSTOMIZED_COMMAND_STRING, 'should_disconnect' => true],
         'get_free_sizes'  => ['command_id' => self::CMD_GET_FREE_SIZES,'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
         'delete_admin'    => ['command_id' => self::CMD_CLEAR_ADMIN,   'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
     ];
 
+    /**
+     * Returns commands available by the class.
+     *
+     * @return array commands list.
+     */
+    static public function get_commands_available()
+    {
+        return array_keys(self::$zklib_commands);
+    }
 
+    /**
+     * Iniatialize TADZKLib class and sets its attributes.
+     *
+     * @param array $options options (ip, udp port and connection timeout).
+     */
     public function __construct(array $options)
     {
         $this->ip = $options['ip'];
@@ -106,11 +117,13 @@ class TADZKLib
         socket_set_option($this->zkclient, SOL_SOCKET, SO_RCVTIMEO, $timeout);
     }
 
-    static public function get_commands_available()
-    {
-        return array_keys(self::$zklib_commands);
-    }
-
+    /**
+     * Magic call to implement dynamic method calling.
+     *
+     * @param string $command method invoked.
+     * @param array $args arguments passed.
+     * @return TADResponse
+     */
     public function __call($command, array $args)
     {
         $should_disconnect = true;
@@ -125,11 +138,6 @@ class TADZKLib
                 $response = $this->zk_set_date($args);
                 break;
 
-                /* Uncomment following lines if you want to use set_user_info method */
-          //      case 'set_user_info':
-          //        $response = $this->zk_set_user_info($args);
-          //        break;
-
             case 'get_free_sizes':
                 $response = $this->zk_get_free_sizes();
                 break;
@@ -143,12 +151,17 @@ class TADZKLib
                 );
         }
 
-        $response = $this->build_command_response($command, $response, $encoding);
+        $response = $this->build_command_response($command, $this->result, $response, $encoding);
         $should_disconnect && $this->disconnect();
 
-        return $response;
+        return new TADResponse($response, $encoding);
     }
 
+    /**
+     * Establish a connection to the device.
+     *
+     * @return boolean <b><code>true</code></b> on successfully conection, otherwise returns <b><code>false</code></b>.
+     */
     private function connect()
     {
         $command = self::CMD_CONNECT;
@@ -178,6 +191,11 @@ class TADZKLib
         }
     }
 
+    /**
+     * Disconnects from the device.
+     *
+     * @return boolean <b><code>true</code></b> on successfully, otherwise returns <b><code>false</code></b>.
+     */
     private function disconnect()
     {
         $command = self::CMD_EXIT;
@@ -202,6 +220,12 @@ class TADZKLib
         }
     }
 
+    /**
+     * Sets device's time and date.
+     *
+     * @param array $dt date and time data.
+     * @return boolean <b><code>true</code></b> on successfully, otherwise returns <b><code>false</code></b>.
+     */
     private function zk_set_date(array $dt = [])
     {
         $normalized_datetime = $this->setup_datetime($dt);
@@ -209,12 +233,11 @@ class TADZKLib
         return $this->send_command_to_device(self::CMD_SET_TIME, pack('I', $encoded_time));
     }
 
-//    private function zk_set_user_info($u)
-//    {
-//        $command_string = str_pad(chr( $u['pin'] ), 2, chr(0)).chr($u['privilege']).str_pad($u['password'], 8, chr(0)).str_pad($u['name'], 28, chr(0)).str_pad(chr(1), 9, chr(0)).str_pad($u['pin2'], 8, chr(0)).str_repeat(chr(0),16);
-//        return $this->send_command_to_device(self::CMD_SET_USER, $command_string);
-//    }
-
+    /**
+     * Gets device's information about current device's storage.
+     *
+     * @return array device's storage information.
+     */
     private function zk_get_free_sizes()
     {
         $fs = [];
@@ -241,6 +264,14 @@ class TADZKLib
         return $fs;
     }
 
+    /**
+     * Helper that allows sending command to device.
+     *
+     * @param integer $command command code.
+     * @param string $command_string subcommand.
+     * @param int $reply_id device's reply.
+     * @return boolean <b><code>true</code></b> on successfully, otherwise returns <b><code>false</code></b>.
+     */
     private function send_command_to_device($command, $command_string = '', $reply_id =null)
     {
         $chksum = 0;
@@ -261,6 +292,8 @@ class TADZKLib
             $u = unpack('H2h1/H2h2/H2h3/H2h4/H2h5/H2h6', substr($this->data_recv, 0, 8));
             $this->session_id =  hexdec($u['h6'].$u['h5']);
 
+            $this->result = $this->checkValid($this->data_recv);
+
             return substr($this->data_recv, 8);
         } catch (ErrorException $e) {
             return false;
@@ -269,10 +302,15 @@ class TADZKLib
         }
     }
 
+    /**
+     * Calculates the chksum of the packet to be sent to the device.
+     *
+     * @param string $p packed sent to the device.
+     * @return string checksum calculated.
+     */
     private function createChkSum($p)
     {
-        /*This function calculates the chksum of the packet to be sent to the
-        time clock
+        /*This function
 
         Copied from zkemsdk.c*/
 
@@ -315,6 +353,16 @@ class TADZKLib
         return pack('S', $chksum);
     }
 
+    /**
+     *  Creates UDP header to be sent to the device.
+     *
+     * @param int $command command id.
+     * @param string $chksum checksum associated.
+     * @param int $session_id session id associated.
+     * @param int $reply_id reply id associated.
+     * @param string $command_string subcomand.
+     * @return string UDP header.
+     */
     private function createHeader($command, $chksum, $session_id, $reply_id, $command_string)
     {
         /*This function puts a the parts that make up a packet together and
@@ -344,10 +392,15 @@ class TADZKLib
         return $buf.$command_string;
     }
 
+    /**
+     * Checks a returned packet to see if it returned CMD_ACK_OK, indicating success.
+     *
+     * @param string $reply packet received from the device.
+     *
+     * @return boolean <b><code>true</code></b> on valid packet, otherwise returns <b><code>false</code></b>.
+     */
     private function checkValid($reply)
     {
-        /*Checks a returned packet to see if it returned CMD_ACK_OK,
-        indicating success*/
         $u = unpack('H2h1/H2h2', substr($reply, 0, 8));
 
         $command = hexdec($u['h2'].$u['h1']);
@@ -366,7 +419,7 @@ class TADZKLib
      * @param mixed $result command result.
      * @return string XML response.
      */
-    private function build_command_response($command, $result, $encoding)
+    private function build_command_response($command, $result_code, $result, $encoding)
     {
         $response_data = [];
 
@@ -375,22 +428,21 @@ class TADZKLib
 
         if (is_array($result)) {
             if (0 === count($result)) {
-                $xml_header = '<?xml version="1.0" encoding="' . $encoding .'" standalone="no"?>';
-                $response = $xml_header . '<' . $base_xml_tag . '>' . TADHelpers::XML_NO_DATA_FOUND . '</' . $base_xml_tag . '>';
+                $xml_header = '';
+                $response = $xml_header . '<' . $base_xml_tag . '>' . '</' . $base_xml_tag . '>';
                 return $response;
             }
             $response_data = ['Row'=>$result];
         } else {
-            $result = !$result;
             $response_data = [
                 'Row'=>[
-                    'Result'=> $result ? '1' : '0',
-                    'Information'=>$result ? self::XML_SUCCESS_RESPONSE : self::XML_FAIL_RESPONSE
+                    'Result'=> $result_code ? '1' : '0',
+                    'Information'=> $result_code ? self::XML_SUCCESS_RESPONSE : self::XML_FAIL_RESPONSE
                 ]
             ];
         }
 
-        return TADHelpers::array_to_xml(new \SimpleXMLElement('<' . $base_xml_tag . '/>'), $response_data, $encoding);
+        return $this->array_to_xml(new \SimpleXMLElement('<' . $base_xml_tag . '/>'), $response_data, $encoding);
     }
 
     /**
@@ -459,5 +511,28 @@ class TADZKLib
              (24 * 60 * 60) + ($t['hour'] * 60 + $t['minute']) * 60 + $t['second'];
 
         return $d;
+    }
+
+    /**
+     * Transforms an array into an XML string.
+     *
+     * @param \SimpleXMLElement $object <code>SimpleXMLElement</code> instance.
+     * @param array $data input array to be transformed.
+     * @return string XML string generated.
+     */
+    private function array_to_xml(\SimpleXMLElement $object, array $data)
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $new_object = $object->addChild($key);
+                $this->array_to_xml($new_object, $value);
+            } else {
+                $object->addChild($key, $value);
+            }
+        }
+
+        $xml = trim(str_replace("<?xml version=\"1.0\"?>", '', $object->asXML()));
+
+        return $xml;
     }
 }

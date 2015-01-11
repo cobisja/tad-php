@@ -27,8 +27,8 @@
 
 namespace TADPHP;
 
-use Providers\TADSoap;
-use Providers\TADZKLib;
+use TADPHP\Providers\TADSoap;
+use TADPHP\Providers\TADZKLib;
 use TADPHP\TAD;
 
 class TADFactory
@@ -65,7 +65,11 @@ class TADFactory
 
         $soap_client = new \SoapClient(null, $soap_options);
 
-        return new TAD(new TADSoap($soap_client, $soap_options), new TADZKLib($options), $options);
+        return new TAD(
+            new TADSoap($soap_client, $soap_options),
+            new TADZKLib($options),
+            $options
+        );
     }
 
     /**

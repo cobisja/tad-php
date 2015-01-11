@@ -9,7 +9,7 @@ TAD: A class that implements an interface to interacts with ZK Time & Atttendanc
 Documentation found about ZK SOAP api is very limited or poor, however TAD class implements most SOAP functions supported by ZK devices. Specifically TAD class exposes the following 21 methods:
 
 ```
-get_date, get_att_log, get_user_info, get_all_user_info, get_user_template, get_combination, get_option, get_free_sizes, set_date, set_user_info, set_user_template, delete_user, delete_template, delete_data, delete_user_password, delete_admin, enable_device, disable_device, refresh_db, restart, and poweroff.
+get_date, get_att_log, get_user_info, get_all_user_info, get_user_template, get_combination, get_option, get_free_sizes, set_date, set_user_info, set_user_template, delete_user, delete_template, delete_data, delete_user_password, delete_admin, enable, disable, refresh_db, restart, and poweroff.
 ```
 All methods above are implemented by 2 classes: **Providers\TADSoap** and **Providers\TADZKLib**.
 
@@ -57,9 +57,9 @@ You can customize TAD object traits passing an options array:
   $tad = $tad_factory->get_instance();  
 ```
 ##TAD API
-SOAP api is implemented by TADSoap class. All methods that use UDP Protocol are implemented by PHP_ZKLib class. Even though you have 2 classes, you do not have to be worried about which method is been calling using SOAP api or through PHP_ZKLib. You've got a single interface.
+SOAP API is implemented by **TADSoap class**. All methods that use UDP Protocol are implemented by **PHP_ZKLib class**. Even though you have 2 classes, you do not have to be worried about which method is been calling using SOAP api or through PHP_ZKLib. You've got a single interface.
 
-Some methods need you set up some parameters prior you can call them. TAD class uses associative arrays as way to pass params to the methods. Using associative arrays is a "more verbose way" that helps you to remember which params you have to pass.
+Some methods need that you set up some parameters prior you can call them. TAD class uses associative arrays as way to pass params to the methods. Using associative arrays is a "more verbose way" that helps you to remember which params you have to pass.
 
 Valid params supported by TAD class are:
 
@@ -232,12 +232,12 @@ $fs = $tad->get_free_sizes();
 Sometimes you need to lock device's screen and keypad to prevent users can use it. You can disable the device and when you want to get it back working, just enable it!
 ```php
 // Disabling device.
-$tad->disable_device();
+$tad->disable();
 
 ...
 
 // Enabling device.
-$tad->enable_device();
+$tad->enable();
 ```
 
 ###Restarting / Shutting down the device.
@@ -251,59 +251,147 @@ $tad->restart();
 $tad->poweroff();
 ```
 
-##A little word about TAD Helpers
-Besides TAD class, you'll find another class named TADHelpers, as it's name suggests, that has several methods to help you with some common functions.
+##TADResponse API
+Every command executed via TAD class will return an object that is an instance of **TADResponse** class. This object contains all information about the device's response received. This way you can get full flexibility to manipulate the responses that you got from the device: you can transform it in XML, JSON or even you can get an array. Also you can set some criterias to make a filtering process on the response.
 
-###Filtering XML according your needs!!!
-As you saw above, all device's responses are in XML format. You get the raw XML and sometimes you'd like to do some kind of processing on reponses. Now, you can process the whole XML response by applying filters. This way, you can get just XML responses that really needs.
+**TADResponse** class offers 14 methods:
+```
+get_response, set_response, get_encoding, set_encoding, get_header, set_header, get_response_body, to_xml, to_json, to_array, count, is_empty_response, filter_xml and filter_by
+
+```
+### Getting and Setting responses
+When you call any TAD method, all responses (including those empty ones) are returned as an **TADResponse object**, so you can invoke any of methods mentioned above:
+```php
+$r= $tad->get_date();
+
+// Get response in XML format.
+$xml_date = $r->get_response();
+
+// Or you can specify the format.
+$json_date = $r->get_response(['format'=>'json']);
+
+// Or you want to get just response's body (without XML header).
+$raw_response = $r->get_response_body(); // This always will be in XML format!!!
+```
+Sometimes you would like to build a TADResponse object by hand:
+```php
+$response = '<Response><Name>Foo</Name><Address>Bar</Address></Response>';
+$encoding = 'iso8859-1';
+
+$tr = new TADResponse($response, $encoding);
+...
+// Maybe later you want to change the response you set before
+$new_response = '<CrazyResponse><Joke>foo bar taz</Joke></CrazyResponse>';
+$tr->set_response($new_response);
+...
+```
+###Getting and Setting response's encoding
+```php
+$r = $tad->get_date();
+
+// Get current response's encoding.
+$encoding = $r->get_encoding();
+
+// Perhaps you want to change response's encoding.
+$r->set_encoding('utf-8');
+```
+
+###Getting and Setting response's header
+Instead of getting a full XML response, you can get just the header's response and you can change it even:
+```php
+$r = $tad->get_date();
+
+$header = $r->get_header();
+// Method above returns '<?xml version="1.0" encoding="iso8859-1" standalone="no"?>'
+
+$new_header = '<?xml version="1.1" encoding="utf-8" standalone="yes"?>';
+
+// Lets set a new response's header.
+$r->set_header($new_header);
+```
+
+###Transform device's responses in XML, JSON or Array format.
+As you seen above, you can get device's responses in different formats using **get_response() method** and specifying the format you want. However, you can use the following methods too:
+```php
+// Get attendance logs for all users.
+$att_logs = $tad->get_att_logs(); // $att_logs is an TADResponse object.
+
+// Get response in XML format.
+$xml_att_logs = $att_logs->to_xml();
+
+// Get response in JSON format.
+$json_att_logs = $att_logs->to_json();
+
+// Get an array from response.
+$array_att_logs = $attt_logs->to_array().
+
+// Lets get an XML response in one single step.
+$xml = $tad->get_att_logs()->to_xml();
+``` 
+
+###How many items does the response have?
+When you are interested just in how many items has the response, just count them:
+```php
+$att_logs = $tad->get_att_logs();
+
+// Get just the number of logs you retrived.
+$logs_number = $att_logs->count();
+```
+
+###Dealing with empty responses
+Sometimes some queries to the device returns an empty answer. Because the original response from the device is in XML format, to know if you got any relevant data, you should have to parse the responses. That's not very handy:
+```php
+$r = $tad->get_att_logs(['pin'=>123]); // This employee does not have any logs!!!
+
+if ($r->is_empty_response()) {
+    echo 'The employee does not have logs recorded';
+}
+...
+```
+
+###Filtering response according your needs!!!
+As you saw above, all device's responses are handled by **TADResponse class**. You get the raw XML but you always get the whole set. What if you you'd like to do some kind of processing on reponses? Now, you can process the whole XML response by applying filters. This way, you can get just XML responses that really needs.
 
 ```php
 // Get attendance logs for all users;
 $att_logs = $tad->get_att_logs();
 
 // Now, you want filter the resulset to get att logs between '2014-01-10' and '2014-03-20'.
-$filtered_att_logs = TADHelpers::filter_xml_by_date(
-	$att_logs,
+$filtered_att_logs = $att_logs->filter_by_date(
     ['start' => '2014-01-10','end' => '2014-03-20']
 );
 
 // Maybe you need to be more specific: get logs of users with privilege of Enroller
 // that generated a 'check-out' event after '2014-08-01'.
-$filtered_att_logs = TADHelpers::filter_xml_by_privilege_and_status_and_date(
-	$att_logs,
+$filtered_att_logs = $att_logs->filter_by_privilege_and_status_and_date(
     2, // 2 = Enroller role.
     1, // 1 = Check-out.
-    ['start'] => '2014-08-01
+    ['start'] => '2014-08-01'
 );
+
+// You can do specific string searching too!!!
+$users = $tad->get_all_user_info();
+
+// Searches for all employees with the string 'Foo' as part of its name.
+$foo_employees = $users->filter_by_name(['like'=>'Foo']);
 ```
 
 Notes:
 
-* XML response is passed as first parameter.
+* If you do a **filter_by** using a non exists tag, you'll always get an **empty response**.
 * When you want to specify specific ranges you have to use an associative array with keys **'start'** (indicates where range begins), and **'end'** (where range ends).
 * **greater than** ranges are indicated by passing only **'start'** key.
 * **less than** ranges are indicated by passing only **'end'** key.
-* To filter by an exact value you have to pass just the value (not an array!). However, if by any reason you decides to use an array, both keys have to have the same value.
+* To perform searches (filtering) to match just partial strings, you have to use the key **'like'** as you saw in the example above.
+* To perform a full match search (filtering) you have to pass the string directly, without use an array.
+* To filter by 1 exact value you have to pass just the value (not an array!). However, if by any reason you decide to use an array, both keys have to have the same value.
 * If you want to build a very specific filter, you have to use **filter_xml()** method. Using it, you are able to built a customized regex to define how the XML have to be processed.
 
-###Don't want to fight with XML?, ..., just don't do it
-TAD class always returns responses in XML format, that is its behavior!. TADHelper class offers you methods to transform XML to JSON or even into Array.
-
-```php
-// Get attendance logs from user with PIN = 123.
-$att_logs = $tad->get_att_log( ['pin'=>123] ); // You get an XML response.
-
-// Let's transform XML response into JSON
-$json_att_logs = TADHelpers::xml_to_json($att_logs);
-
-// Get crazy!!!, let's transform XML response into array.
-$att_logs_array = TADHelpers::xml_to_array($att_logs).
-```
 ##Todo
-TAD class is not perfect!!!. As mentioned at the beggining, it's been developed after hours, and hours, and hours of googling and it's been tested using just Fingertec Q2i Time & attendance device (that it's I have in my work), so it's possible that you can find errors when you use it with others devices or even you can find better ways to do the things. For that reason, there are some things to do:
+**TADPHP** is not perfect!!!. As mentioned at the beggining, it's been developed after hours, and hours, and hours of googling and it's been tested using just Fingertec Q2i Time & attendance device (that it's I have in my work), so it's possible that you can find errors when you use it with others devices or even you can find better ways to do the things. For that reason, there are some things to do:
 
 * Make TAD-PHP works perfectly on devices with ZEM greater than 600 (with ZEM800 almost everything works as expected, but there are still some bugs).
-* Make set_user_info() method works with BioBridge VX 10.0 algorithm.
+* Make set_user_template() method works with BioBridge VX 10.0 algorithm.
 * Find out how to customize the PIN code generation in the PHP_ZKLib zk_set_user_info() method.
 * Test TAD method get_option(). This method allows you getting detailed information about the device, but it's necessary to set its argument to a valid option name. However, these names are not available, and according to documentation ZK Software can give you all options names but you have to pay for them.
 * Enhance PHP_ZKLib to allows more sophisticated functions like uploading user's photo for example.
@@ -318,7 +406,17 @@ Feel free to contribute!!!. Welcome aboard!!!
 
 ##Misc
 ###Version history
-** 0.3.2** (Saturday, 3rd January 2015)
+**0.4.0** (Sunday, 11th January 2015)
+
+* Wiped out **TADHelpers class**. All its behavior it's been implemented into **TADResponse class**.
+* All classes has been refactored according the new behavior associated to **TADResponse class**.
+* All test suite has been reviewed and upgraded.
+* Changed global **Provider namespace** to get a consistent namespacing schema.
+* Some minor bugs fixes.
+* Improved **TADZKLib class** documentation.
+* Some fixes in documentation.
+
+**0.3.2** (Saturday, 3rd January 2015)
 
 * Implemented a ***dynamic xml filter*** that allows you to build single or multiple filtering criterias based on XML tags of response.
 * Refactoring of tests.
