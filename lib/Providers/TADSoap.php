@@ -29,7 +29,9 @@ namespace TADPHP\Providers;
 
 use TADPHP\TADResponse;
 
-
+/**
+ * TADSoap: class that allows to interact with a Time & Attendance device using SOAP.
+ */
 class TADSoap
 {
     const XML_FAIL_RESPONSE = 'Fail!';
@@ -37,9 +39,7 @@ class TADSoap
     const SOAP_VERSION = SOAP_1_1;
 
     /**
-     * SOAP commands array supported by the class.
-     *
-     * @var array
+     * @var array SOAP commands array supported by the class.
      */
     static private $soap_commands_available = [
         'get_date'            => '<GetDate><ArgComKey>%com_key%</ArgComKey></GetDate>',
@@ -59,16 +59,12 @@ class TADSoap
     ];
 
     /**
-     * Holds a <code>\SoapClient</code> instance.
-     *
-     * @var object
+     * @var SOAPClient Holds a <code>\SoapClient</code> instance.
      */
     private $soap_client;
 
     /**
-     * Options array required by <code>SoapClient</code> class.
-     *
-     * @var array
+     * @var array Options array required by <code>SoapClient</code> class.
      */
     private $soap_client_options;
 
@@ -212,6 +208,13 @@ class TADSoap
         return $parsed_command;
     }
 
+    /**
+     * Build an XML header.
+     *
+     * @param string $xml XML string which header will be added to.
+     * @param string $encoding encoding
+     * @return string full XML string (Header + Body).
+     */
     public static function normalize_xml_string($xml, $encoding = 'utf-8')
     {
         $xml ='<?xml version="1.0" encoding="' . $encoding . '" standalone="no"?>' . $xml;

@@ -73,15 +73,39 @@ class TADZKLib
     const XML_FAIL_RESPONSE    = 'Fail!';
     const XML_SUCCESS_RESPONSE = 'Successfully!';
 
+    /**
+     * @var string Device's ip address.
+     */
     private $ip;
+
+    /**
+     * @var int Device's UDP port.
+     */
     private $port;
+
+    /**
+     * @var TADZKlib holds a class instance.
+     */
     private $zkclient;
 
+    /**
+     * @var string device's response (low level format).
+     */
     private $data_recv = '';
+
+    /**
+     * @var int session id associated to UDP transaction.
+     */
     private $session_id = 0;
 
+    /**
+     * @var boolean tells if result was successfully (<code>true</code>) or fail (<code>false</code>).
+     */
     private $result;
 
+    /**
+     * @var array commands set supported by <code>TADZKLib</code> class.
+     */
     static private $zklib_commands = [
         'get_platform' => [
             'command_id' => self::CMD_DEVICE,

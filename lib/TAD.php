@@ -37,7 +37,7 @@ use TADPHP\Exceptions\UnrecognizedCommand;
  * TAD: Time & Attendance Device is a class that implements some function presents in time and attendance device.
  *
  *
- * For developing purposes, it' been used Fingertec Q2i device (that it's been using were I work).
+ * For developing purposes, it's been used Fingertec Q2i device (that it's been using were I work).
  *
  * Methods exposed by TAD class have been tested using Q2i deviced only , that has a Linux 2.6.21 kernel (ZEM-600).
  * However, it's possible that TAD class works with similar devices, since most of them use the same SOAP API from
@@ -52,7 +52,7 @@ use TADPHP\Exceptions\UnrecognizedCommand;
  * PHP_ZKLib class it's been fully integrated, after a refactoring process to take out all duplicated code (DRY)
  *
  * TAD Class has been tested as far as I could. If you check the test code coverage you'll notice that it does not
- * reach 100%. The reason is that it was not possible to write test fot PHP_ZKLib class. I have to admit that
+ * reach 100%. The reason is that it was not possible to write some tests fof PHP_ZKLib class. I have to admit that
  * I not have fully understanding about what it's done by some methods. I could not find technical information
  * about UDP protocol for ZK devices.
  *
@@ -61,6 +61,12 @@ use TADPHP\Exceptions\UnrecognizedCommand;
  * about when run the method invoked using TAD class or PHP_ZKLib class.
  *
  * To get a TAD instance, call <code><b>get_instance()</b></code> method from <code><b>TADFactory</b></code> class.
+ *
+ * Please note that all device's responses are handled by TAD through <b><code>TADResponse</code></b> class. For
+ * that reason all responses are returned embedded in <code>TADResponse</code> object.
+ *
+ * You can get responses in XML, JSON or Array using the respective methods exposed by <code>TADResponse</code> class.
+ * (<code>to_xml(), to_json(), to_array(), get_reponse()</code>)
  *
  * Some examples:
  *
@@ -79,36 +85,20 @@ use TADPHP\Exceptions\UnrecognizedCommand;
  * $r = $b1->set_date(['date'=>'2014-12-31', 'time'=>'23:59:59']); // method executed via PHP_ZKLib.
  * </code>
  *
- * All device responses are in XML format. When you need to get them in a different format you can use
- * some utilitites (helpers) methods exposed by TAD class:
- *
- * Some examples:
+ * All device responses are <code>TADResponse</code> objects. You can transform them as shown below:
  *
  * Get an array with logs of user with pin = 99999999:
  * <code>
- * $logs = TADHelpers::xml_to_array($b1->get_att_log(['pin'=>'99999999']);
+ * $logs = $b1->get_att_log(['pin'=>'99999999'])->to_array();
  * </code>
  *
  * If you want to filter logs by date:
  * <code>
  * $logs = $b1->get_att_log(['pin'=>'99999999']);
- * $logs = TADHelpers::filter_xml_by_date($logs, ['start_date'=>'2014-11-27', 'end_date'=>'2014-12-02']);
+ * $logs = $logs->filter_by_date(['start_date'=>'2014-11-27', 'end_date'=>'2014-12-02']);
  * </code>
  *
- * To get wich commands are available to run via TADSoap class and wich ones are run via PHP_ZKLib you have the
- * following 2 static methods <code><b>soap_commands_available</b></code> and
- * <code><b>zklib_commands_available</b></code>
- *
- * TAD class Limitations:
- *
- * <li>
- * <code>set_user_template</code> method only works using BioBridge VX 9.0 algorithm (with VX 10, the device freezes!!!)
- * </li>.
- * <li><code>set_user_info</code> methos works properly only if the user you create don't exist previously</li>.
- * <li>
- * If you want to edit user info, you have to delete the user first, then you have to create it using
- * <code>set_user_info</code>.
- * </li>
+ * For more information see README.md
  *
  * @author Jorge Cobis - email: jcobis@gmail.com / twitter: @cobisja
  */

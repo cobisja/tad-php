@@ -28,12 +28,86 @@ For practical purposes, you don't have to be worried about when to use TAD class
 * All ZK Time & Attendance devices with web server built-in (with ZEM600 or less).
 
 ##Getting started
+###Setting up the environment
+After download TAD-PHP, you have 2 ways to get your enviroment configured to use the classes:
+
+####Composer
+
+[Composer](https://getcomposer.org) is the PHP's package manager and is the recommended way to get packages for your projects. It's also able to build automatically ***autoloaders*** if you wrote down your code using PSR-0 and/or PSR-4 standards, avoiding you headaches about everything related to loading classes.
+
+**TADPHP** is built follows PSR-4 standard and comes with a specific file named **composer.json** that allows **Composer** to generate a file named **autoload.php** (beside others files of course). This files generated is the only one you need to include in your project to get all classes required by TADPHP loaded in memory:
+
+1. Install Composer:
+	```
+    curl -s https://getcomposer.org/installer | php
+	
+	```
+
+2. Get inside TADPHP root folder and generate the **autoload.php** file:
+	```
+    php composer.phar dump-autoload
+    ```
+    The command above will generate a folder called **vendor**. Inside of it, you'll see the **autoload.php**
+    
+3. Require/Include **autoload.php** file in the **index.php** of your project or whatever file you need to use **TAD-PHP** classes:
+	```php
+    <?php
+    require 'vendor/autoload.php';
+    ...
+    
+    ```
+    
+####Loading TAD-PHP classes by hand
+Even if Composer it's the preferred method to generate the files needed to get all classes loaded, maybe you want to do the task by hand:
+
+1. Copy and paste TAD-PHP folder in your project root.
+2. Rename TAD-PHP folder to use a shorter name (for example 'tad').
+3. Require/Include all classes required by TAD-PHP using the relative TAD-PHP path
+	```php
+    <?php
+	require 'tad/lib/TADFactory.php';
+	require 'tad/lib/TAD.php';
+	require 'tad/lib/TADResponse.php';
+	require 'tad/lib/Providers/TADSoap.php';
+	require 'tad/lib/Providers/TADZKLib.php';
+	require 'tad/lib/Exceptions/ConnectionError.php';
+	require 'tad/lib/Exceptions/FilterArgumentError.php';
+	require 'tad/lib/Exceptions/UnrecognizedArgument.php';
+	require 'tad/lib/Exceptions/UnrecognizedCommand.php';
+    ```
+    
+####Handling namespaces
+All TAD-PHP classes are under the namespace named **TADPHP**. So, to use any class you need to use the **Fully qualified class name**. For example, to get a new instance of **TADFactory class** you need to use:
+
+```php
+<?php
+...
+$tad_factory = new TADPHP\TADFactory();
+...
+```
+
+However, as your project grows up using fully qualified class names becomes annoying, so it's better to use PHP **USE** sentence:
+
+```php
+<?php
+...
+use TADPHP\TADFactory;
+use TADPHP\TAD;
+...
+
+$comands = TAD::commands_available();
+$tad = (new TADFactory(['ip'=>'192.168.100.156', 'com_key'=>0]))->get_instance();
+...
+```
+
 ###Class instantiation
 First, instantiate a TADFactory object, then use it to create a TAD object.
 ```php
 <?php
-  $tad_factory = new TADFactory(['ip'=>'192.168.0.1']);
-  $tad = $tad_factory->get_instance();
+...
+$tad_factory = new TADFactory(['ip'=>'192.168.0.1']);
+$tad = $tad_factory->get_instance();
+...
 ```
 Or you can get a TAD object in one single step (valid only in PHP 5.4+):
 ```php
@@ -407,6 +481,11 @@ Feel free to contribute!!!. Welcome aboard!!!
 
 ##Misc
 ###Version history
+***0.4.2** (Saturday, 17th January 2015)
+
+* Improved directions to get TAD-PHP running.
+* Some minor documentation changes.
+
 **0.4.1** (Friday, 16th January 2015)
 
 * Enhanced **TADZKLib class** by adding 14 new methods to get operating information about the device.
