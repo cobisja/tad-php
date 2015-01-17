@@ -165,11 +165,6 @@ class TAD
     private $udp_port;
 
     /**
-     * @var string Original response from device.
-     */
-    private $last_response;
-
-    /**
      * Holds a <code>TADSoap</code> instance to talk to device via SOAP.
      *
      * @var object
