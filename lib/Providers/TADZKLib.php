@@ -59,12 +59,13 @@ class TADZKLib
     const CMD_GET_TIME = 201;
     const CMD_SET_TIME = 202;
     const CMD_VERSION = 1100;
+    const CMD_AUTH = 1102;
     const CMD_DEVICE = 11;
     const CMD_CLEAR_ADMIN = 20;
     const CMD_SET_USER = 8;
     const CMD_GET_FREE_SIZES = 50;
 
-    const EMPTY_COMMAND_STRING = '';
+    const EMPTY_STRING = '';
     const CUSTOMIZED_COMMAND_STRING = null;
 
     const DEVICE_GENERAL_INFO_STRING_LENGTH = 184;
@@ -82,13 +83,132 @@ class TADZKLib
     private $result;
 
     static private $zklib_commands = [
-        'set_date'        => ['command_id' => self::CMD_SET_TIME,      'command_string' => self::CUSTOMIZED_COMMAND_STRING, 'should_disconnect' => true],
-        'enable'          => ['command_id' => self::CMD_ENABLEDEVICE,  'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
-        'disable'         => ['command_id' => self::CMD_DISABLEDEVICE, 'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => false],
-        'restart'         => ['command_id' => self::CMD_RESTART,       'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
-        'poweroff'        => ['command_id' => self::CMD_POWEROFF,      'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
-        'get_free_sizes'  => ['command_id' => self::CMD_GET_FREE_SIZES,'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
-        'delete_admin'    => ['command_id' => self::CMD_CLEAR_ADMIN,   'command_string' => self::EMPTY_COMMAND_STRING, 'should_disconnect' => true],
+        'get_platform' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~Platform',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~Platform='
+        ],
+        'get_fingerprint_algorithm' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~ZKFPVersion',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~ZKFPVersion='
+        ],
+        'get_serial_number' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~SerialNumber',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~SerialNumber='
+        ],
+        'get_oem_vendor' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~OEMVendor',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~OEMVendor='
+        ],
+        'get_mac_address' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => 'MAC',
+            'should_disconnect' => true,
+            'result_filter_string'=>'MAC='
+        ],
+        'get_device_name' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~DeviceName',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~DeviceName='
+        ],
+        'get_manufacture_time' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~ProductTime',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~ProductTime='
+        ],
+        'get_antipassback_mode' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~APBFO',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~APBFO='
+        ],
+        'get_workcode' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~WCFO',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~WCFO='
+        ],
+        'get_ext_format_mode' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~ExtendFmt',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~ExtendFmt='
+        ],
+        'get_encrypted_mode' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => 'encrypt_out',
+            'should_disconnect' => true,
+            'result_filter_string'=>'encrypt_out='
+        ],
+        'get_pin2_width' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~PIN2Width',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~PIN2Width='
+        ],
+        'get_ssr_mode' => [
+            'command_id' => self::CMD_DEVICE,
+            'command_string' => '~SSR',
+            'should_disconnect' => true,
+            'result_filter_string'=>'~SSR='
+        ],
+        'get_firmware_version' => [
+            'command_id' => self::CMD_VERSION,
+            'command_string' => self::EMPTY_STRING,
+            'should_disconnect' => true,
+            'result_filter_string'=>false
+        ],
+        'get_free_sizes' => [
+            'command_id' => self::CMD_GET_FREE_SIZES,
+            'command_string' => self::EMPTY_STRING,
+            'should_disconnect' => true,
+            'result_filter_string'=>false
+        ],
+        'set_date' => [
+            'command_id' => self::CMD_SET_TIME,
+            'command_string' => self::CUSTOMIZED_COMMAND_STRING,
+            'should_disconnect' => true,
+            'result_filter_string'=>false
+        ],
+        'delete_admin' => [
+            'command_id' => self::CMD_CLEAR_ADMIN,
+            'command_string' => self::EMPTY_STRING,
+            'should_disconnect' => true,
+            'result_filter_string'=>false
+        ],
+        'enable' => [
+            'command_id' => self::CMD_ENABLEDEVICE,
+            'command_string' => self::EMPTY_STRING,
+            'should_disconnect' => true,
+            'result_filter_string'=>false
+        ],
+        'disable' => [
+            'command_id' => self::CMD_DISABLEDEVICE,
+            'command_string' => self::EMPTY_STRING,
+            'should_disconnect' => false,
+            'result_filter_string'=>false
+        ],
+        'restart' => [
+            'command_id' => self::CMD_RESTART,
+            'command_string' => self::EMPTY_STRING,
+            'should_disconnect' => true,
+            'result_filter_string'=>false
+        ],
+        'poweroff' => [
+            'command_id' => self::CMD_POWEROFF,
+            'command_string' => self::EMPTY_STRING,
+            'should_disconnect' => true,
+            'result_filter_string'=>false
+        ]
     ];
 
     /**
@@ -151,7 +271,8 @@ class TADZKLib
                 );
         }
 
-        $response = $this->build_command_response($command, $this->result, $response, $encoding);
+        $result_filter_string = self::$zklib_commands[$command]['result_filter_string'];
+        $response = $this->build_command_response($command, $this->result, $response, $encoding, $result_filter_string);
         $should_disconnect && $this->disconnect();
 
         return new TADResponse($response, $encoding);
@@ -165,7 +286,7 @@ class TADZKLib
     private function connect()
     {
         $command = self::CMD_CONNECT;
-        $command_string = '';
+        $command_string = self::EMPTY_STRING;
         $chksum = 0;
         $session_id = 0;
         $reply_id = -1 + self::USHRT_MAX;
@@ -419,7 +540,7 @@ class TADZKLib
      * @param mixed $result command result.
      * @return string XML response.
      */
-    private function build_command_response($command, $result_code, $result, $encoding)
+    private function build_command_response($command, $result_code, $result, $encoding, $result_filter_string=false)
     {
         $response_data = [];
 
@@ -434,12 +555,16 @@ class TADZKLib
             }
             $response_data = ['Row'=>$result];
         } else {
-            $response_data = [
-                'Row'=>[
-                    'Result'=> $result_code ? '1' : '0',
-                    'Information'=> $result_code ? self::XML_SUCCESS_RESPONSE : self::XML_FAIL_RESPONSE
-                ]
-            ];
+            if (!is_bool($result) && true === $result_code) {
+                $result_filter_string = $result_filter_string ? $result_filter_string : null;
+
+                $result_data = str_replace($result_filter_string, '', $result);
+            } else {
+                $result_data = ($result_code ? self::XML_SUCCESS_RESPONSE : self::XML_FAIL_RESPONSE);
+            }
+
+            $result_code = $result_code ? '1' : '0';
+            $response_data = ['Row'=>['Result'=> $result_code, 'Information'=> $result_data]];
         }
 
         return $this->array_to_xml(new \SimpleXMLElement('<' . $base_xml_tag . '/>'), $response_data, $encoding);
