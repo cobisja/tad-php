@@ -4,12 +4,12 @@ A simple PHP class to interacts with ZK Time & Attendance Devices.
 
 ##About
 
-TAD: A class that implements an interface to interacts with ZK Time & Atttendance devices.
+TAD: A class that implements an interface to interacts with ZK Time & Attendance devices.
 
-Documentation found about ZK SOAP api is very limited or poor, however TAD class implements most SOAP functions supported by ZK devices. Specifically TAD class exposes the following 21 methods:
+Documentation found about ZK SOAP api is very limited or poor, however TAD class implements most SOAP functions supported by ZK devices. Specifically TAD class exposes the following 35 methods:
 
 ```
-get_date, get_att_log, get_user_info, get_all_user_info, get_user_template, get_combination, get_option, get_free_sizes, set_date, set_user_info, set_user_template, delete_user, delete_template, delete_data, delete_user_password, delete_admin, enable, disable, refresh_db, restart, and poweroff.
+get_date, get_att_log, get_user_info, get_all_user_info, get_user_template, get_combination, get_option, get_free_sizes, get_platform, get_fingerprint_algorithm, get_serial_number, get_oem_vendor, get_mac_address, get_device_name, get_manufacture_time, get_antipassback_mode, get_workcode, get_ext_format_mode, get_encrypted_mode, get_pin2_width, get_ssr_mode, get_firmware_version, set_date, set_user_info, set_user_template, delete_user, delete_template, delete_data, delete_user_password, delete_admin, enable, disable, refresh_db, restart, and poweroff.
 ```
 All methods above are implemented by 2 classes: **Providers\TADSoap** and **Providers\TADZKLib**.
 
@@ -86,19 +86,19 @@ $zklib_commands = TAD::zklib_commands_available();
 ###Getting and Setting Date and Time
 
 ```php
-// Gettting current time and date
+// Getting current time and date
 $dt = $tad->get_date();
 
-// Setting date device to '2014-01-01' (time will be set to now!)
+// Setting device's date to '2014-01-01' (time will be set to now!)
 $response = $tad->set_date(['date'=>'2014-01-01']);
 
-// Setting time device to '12:30:15' (date will be set to today!)
+// Setting device's time to '12:30:15' (date will be set to today!)
 $response = $tad->set_date(['time'=>'12:30:15']);
 
-// Setting device date & time
+// Setting device's date & time
 $response = $tad->set_date(['date'=>'2014-01-01', 'time'=>'12:30:15']);
 
-// Setting device date & time to now.
+// Setting device's date & time to now.
 $response = $tad->set_date();
 ```
 ###Getting attendance logs
@@ -134,7 +134,7 @@ $all_user_info = $tad->get_all_user_info();
 ###Creating / Updating users
 TAD class allows you to register new users in the device or even you can update (change) information about an user already registered. However to achieve this, TAD class needs to delete the user (of course this applies when you are updating user's information) and then creates the user. Maybe this is not the best way to do that, but if TAD just calls the method to create a user, it will be created as many times as you call it.
 
-If you look into PHP_ZKLib code, you'll see a method to create / update users. However, when you call that method, it generates a PIN code (not PIN2 code) in a way that if that code already exists in the device, it refuses to create the user. This is a method I would like to modify to work properly but I don't know how PIN code is created.
+If you look into PHP_ZKLib code, you'll see a method to create / update users. However, when you call that method, it generates a PIN code (not PIN2 code) in a way that if that code already exists in the device, it refuses to create the user. This is a method that should be modified to make it working properly but the way how PIN code is created is unknown.
 
 In the meantime, TAD class uses delete and create SOAP calls. Of course, to make things easy for you, you have to call just 1 method.
 ```php
@@ -323,13 +323,13 @@ $xml_att_logs = $att_logs->to_xml();
 $json_att_logs = $att_logs->to_json();
 
 // Get an array from response.
-$array_att_logs = $attt_logs->to_array().
+$array_att_logs = $att_logs->to_array().
 
 // Lets get an XML response in one single step.
 $xml = $tad->get_att_logs()->to_xml();
 ``` 
 
-###How many items does the response have?
+###Counting how many items has the response
 When you are interested just in how many items has the response, just count them:
 ```php
 $att_logs = $tad->get_att_logs();
@@ -378,6 +378,7 @@ $foo_employees = $users->filter_by_name(['like'=>'Foo']);
 
 Notes:
 
+* The original response is lost! because it is replaced with the filtered response.
 * If you do a **filter_by** using a non exists tag, you'll always get an **empty response**.
 * When you want to specify specific ranges you have to use an associative array with keys **'start'** (indicates where range begins), and **'end'** (where range ends).
 * **greater than** ranges are indicated by passing only **'start'** key.
@@ -406,6 +407,12 @@ Feel free to contribute!!!. Welcome aboard!!!
 
 ##Misc
 ###Version history
+**0.4.1** (Friday, 16th January 2015)
+
+* Enhanced **TADZKLib class** by adding 14 new methods to get operating information about the device.
+* Some minor bug fixes.
+* Some fixes in documentation.
+
 **0.4.0** (Sunday, 11th January 2015)
 
 * Wiped out **TADHelpers class**. All its behavior it's been implemented into **TADResponse class**.
@@ -438,7 +445,6 @@ Feel free to contribute!!!. Welcome aboard!!!
 * Some bug fixes.
 * General code formatting to ajust it to PSR-1 and PSR-2 (it is not completed yet!).
 * Some improvements in README.md
-
 
 **0.2.0** (Wednesday, 24th December 2014)
 
