@@ -61,12 +61,15 @@ After download TAD-PHP, you have 2 ways to get your enviroment configured to use
 Even if Composer it's the preferred method to generate the files needed to get all classes loaded, maybe you want to do the task by hand:
 
 1. Copy and paste TAD-PHP folder in your project root.
+
 2. Rename TAD-PHP folder to use a shorter name (for example 'tad').
+
 3. Require/Include all classes required by TAD-PHP using the relative TAD-PHP path
+
 	```php
     <?php
 	require 'tad/lib/TADFactory.php';
-	require 'tad/lib/TAD.php';
+    require 'tad/lib/TAD.php';
 	require 'tad/lib/TADResponse.php';
 	require 'tad/lib/Providers/TADSoap.php';
 	require 'tad/lib/Providers/TADZKLib.php';
@@ -74,6 +77,7 @@ Even if Composer it's the preferred method to generate the files needed to get a
 	require 'tad/lib/Exceptions/FilterArgumentError.php';
 	require 'tad/lib/Exceptions/UnrecognizedArgument.php';
 	require 'tad/lib/Exceptions/UnrecognizedCommand.php';
+    
     ```
     
 ####Handling namespaces
